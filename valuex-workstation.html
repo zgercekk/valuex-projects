@@ -1178,11 +1178,16 @@ a.comp-name:hover { color: var(--purple); text-decoration: underline; }
       <div class="profile-view">
 
         <div class="profile-head">
-          <div class="profile-mono" id="pv-mono">··</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:7px;">
+            <div class="profile-mono" id="pv-mono">··</div>
+            <button type="button" id="pv-logo-btn" class="pv-logo-btn" title="Update the logo without re-running the evaluation">Change logo</button>
+            <input type="file" id="pv-logo-input" accept="image/png,image/jpeg,image/webp,image/svg+xml" style="display:none;">
+          </div>
           <div class="profile-title">
             <h1 id="pv-name">—</h1>
             <p class="tag" id="pv-tag">—</p>
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;" id="pv-chips"></div>
+            <p id="pv-notes" style="margin-top:12px;font-size:12px;line-height:1.5;color:var(--text-2);white-space:pre-wrap;max-width:72ch;display:none;"></p>
           </div>
           <button class="profile-close" data-view="queue" title="Back to library">×</button>
         </div>
@@ -1305,7 +1310,7 @@ a.comp-name:hover { color: var(--purple); text-decoration: underline; }
           </div>
         </div>
         <div class="ps-impact-strip" id="er-pubsig-strip" style="display:none;">
-          <span class="ic">🌐</span>
+          <span class="ic"></span>
           <span class="txt">Public signals applied to this score: <b id="er-pubsig-strip-count">0</b> finding(s) · net <b id="er-pubsig-strip-delta">+0.0 pts</b> of the total <span style="color:var(--text-3);font-weight:400;">(before signals: <span id="er-pubsig-strip-base">—</span>/360)</span></span>
           <a href="#card-public-signals" class="jump" id="er-pubsig-strip-jump">View detail ↓</a>
         </div>
@@ -1429,7 +1434,7 @@ a.comp-name:hover { color: var(--purple); text-decoration: underline; }
           </div>
 
           <div class="card-ev" id="card-public-signals">
-            <div class="card-head"><h3>🌐 Public Signal Impact <span class="help-ico" data-tip="Concrete, dated updates found on the pasted public links (website, press, social, technical, funding/investor sources) that influenced this scoring — separate from the deck and Typeform. Only specific, sourced updates can move a score; vague claims are ignored. This panel is internal-only and never appears on the public Selection or Below-Threshold pages.">?</span></h3><span class="meta" id="er-pubsig-meta"></span></div>
+            <div class="card-head"><h3> Public Signal Impact <span class="help-ico" data-tip="Concrete, dated updates found on the pasted public links (website, press, social, technical, funding/investor sources) that influenced this scoring — separate from the deck and Typeform. Only specific, sourced updates can move a score; vague claims are ignored. This panel is internal-only and never appears on the public Selection or Below-Threshold pages.">?</span></h3><span class="meta" id="er-pubsig-meta"></span></div>
             <div class="card-body" id="er-public-signals"></div>
           </div>
 
@@ -2039,6 +2044,7 @@ var projectLogo = null;
 })();
 
 
+(function(){ var st=document.createElement('style'); st.textContent='.pv-logo-btn{font-family:var(--mono);font-size:10px;letter-spacing:.04em;color:var(--purple);background:transparent;border:1px solid var(--line);border-radius:6px;padding:4px 9px;cursor:pointer;transition:.15s;} .pv-logo-btn:hover{border-color:var(--purple);background:var(--panel-2);}'; document.head.appendChild(st); })();
 function fmtSize(b) { if (b<1024) return b+' B'; if (b<1024*1024) return (b/1024).toFixed(1)+' KB'; return (b/1048576).toFixed(2)+' MB'; }
 function fileIconLabel(name) {
   var ext = name.split('.').pop().toLowerCase();
@@ -3530,6 +3536,7 @@ async function runVALUEXEvaluation() {
   evalData.website = evalData.website || meta.website || '';
   evalData.founder = evalData.founder || meta.founder || '';
   evalData.founderLinkedin = evalData.founderLinkedin || meta.founderLinkedin || '';
+  evalData.notes = evalData.notes || meta.notes || '';
   evalData.competitors = (evalData.competitors && evalData.competitors.length) ? evalData.competitors : (isDemo ? buildCompetitors(meta, evalData.dimensions || []) : []);
   evalData.includeCompetitors = (evalData.includeCompetitors !== false);
 
@@ -5473,6 +5480,51 @@ function ensureEvalRendered() {
   }
 }
 
+function vxProcessImage(file, cb) {
+  if (!file) return;
+  if (!/^image\//.test(file.type)) { toast('Logo must be a PNG, JPG, WEBP or SVG', '!'); return; }
+  if (file.size > 6 * 1024 * 1024) { toast('Logo is too large (max 6 MB)', '!'); return; }
+  var reader = new FileReader();
+  reader.onload = function(ev){
+    var dataUrl = ev.target.result;
+    if (file.type === 'image/svg+xml') { cb(dataUrl); return; }
+    var im = new Image();
+    im.onload = function(){
+      var maxW = 440, maxH = 220, scale = Math.min(1, maxW / im.width, maxH / im.height);
+      var w = Math.round(im.width * scale), h = Math.round(im.height * scale);
+      var c = document.createElement('canvas'); c.width = w; c.height = h;
+      var ctx = c.getContext('2d'); ctx.imageSmoothingQuality = 'high'; ctx.drawImage(im, 0, 0, w, h);
+      var keepsAlpha = (file.type === 'image/png' || file.type === 'image/webp');
+      cb(keepsAlpha ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.92));
+    };
+    im.onerror = function(){ cb(dataUrl); };
+    im.src = dataUrl;
+  };
+  reader.readAsDataURL(file);
+}
+function updateProjectLogo(id, dataUrl) {
+  var list = getProjects();
+  var idx = list.findIndex(function(p){ return p.id === id; });
+  if (idx < 0) { toast('Project not found', '!'); return; }
+  list[idx].logo = dataUrl;
+  setProjects(list);
+  renderProfile(list[idx]);
+  renderSidebarRecent();
+  toast('Logo updated \u2014 no re-evaluation needed', '\u2713');
+}
+(function initProfileLogoBtn(){
+  var btn = document.getElementById('pv-logo-btn');
+  var inp = document.getElementById('pv-logo-input');
+  if (!btn || !inp) return;
+  btn.addEventListener('click', function(){ inp.click(); });
+  inp.addEventListener('change', function(){
+    if (inp.files && inp.files[0] && currentProjectId) {
+      vxProcessImage(inp.files[0], function(dataUrl){ updateProjectLogo(currentProjectId, dataUrl); inp.value = ''; });
+    } else if (!currentProjectId) {
+      toast('Open a project first', '!');
+    }
+  });
+})();
 function statusLabel(s) { return ({approved:'Approved', pending:'Pending', revisit:'Revisit', declined:'Declined'})[s] || s; }
 function getMonoFromName(n) {
   if (!n) return '··';
@@ -5665,9 +5717,24 @@ function openProfile(id) {
 }
 
 function renderProfile(p) {
-  document.getElementById('pv-mono').textContent = getMonoFromName(p.name);
+  var monoEl = document.getElementById('pv-mono');
+  if (p.logo) {
+    monoEl.textContent = '';
+    monoEl.style.backgroundImage = 'url("' + p.logo + '")';
+    monoEl.style.backgroundSize = 'contain';
+    monoEl.style.backgroundRepeat = 'no-repeat';
+    monoEl.style.backgroundPosition = 'center';
+  } else {
+    monoEl.style.backgroundImage = '';
+    monoEl.textContent = getMonoFromName(p.name);
+  }
   document.getElementById('pv-name').textContent = p.name || '—';
   document.getElementById('pv-tag').textContent = p.summary || '—';
+  var notesEl = document.getElementById('pv-notes');
+  if (notesEl) {
+    if (p.notes) { notesEl.textContent = 'Notes · ' + p.notes; notesEl.style.display = 'block'; }
+    else { notesEl.style.display = 'none'; }
+  }
 
   var chips = document.getElementById('pv-chips');
   chips.innerHTML = '';
