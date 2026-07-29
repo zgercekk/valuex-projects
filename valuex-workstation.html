@@ -1182,6 +1182,7 @@ a.comp-name:hover { color: var(--purple); text-decoration: underline; }
             <div class="profile-mono" id="pv-mono">··</div>
             <button type="button" id="pv-logo-btn" class="pv-logo-btn" title="Update the logo without re-running the evaluation">Change logo</button>
             <input type="file" id="pv-logo-input" accept="image/png,image/jpeg,image/webp,image/svg+xml" style="display:none;">
+            <button type="button" id="pv-preview-btn" class="pv-logo-btn" title="Enable a private preview link the founder can review before you publish to Selection">Copy preview link</button>
           </div>
           <div class="profile-title">
             <h1 id="pv-name">—</h1>
@@ -5523,6 +5524,30 @@ function updateProjectLogo(id, dataUrl) {
     } else if (!currentProjectId) {
       toast('Open a project first', '!');
     }
+  });
+})();
+function copyPreviewLink(id) {
+  var list = getProjects();
+  var idx = list.findIndex(function(p){ return p.id === id; });
+  if (idx < 0) { toast('Project not found', '!'); return; }
+  // Flag the project so projects.js resolves its ?preview=1 link before it is
+  // published to Selection; syncs to the shared store via setProjects.
+  list[idx].previewReady = true;
+  setProjects(list);
+  var base = (location.origin && location.origin.indexOf('http') === 0) ? location.origin : 'https://www.valuex.at';
+  var url = base + '/project.html?slug=' + encodeURIComponent(selectionSlugify(list[idx].name)) +
+            '&id=' + encodeURIComponent(list[idx].id || '') + '&preview=1';
+  function done(){ toast('Preview link copied \u2014 founder can review before you publish', '\u2713'); }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(done, function(){ window.prompt('Copy this preview link:', url); });
+  } else { window.prompt('Copy this preview link:', url); }
+}
+(function initPreviewBtn(){
+  var btn = document.getElementById('pv-preview-btn');
+  if (!btn) return;
+  btn.addEventListener('click', function(){
+    if (currentProjectId) copyPreviewLink(currentProjectId);
+    else toast('Open a project first', '!');
   });
 })();
 function statusLabel(s) { return ({approved:'Approved', pending:'Pending', revisit:'Revisit', declined:'Declined'})[s] || s; }
