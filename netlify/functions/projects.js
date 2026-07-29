@@ -158,6 +158,7 @@ export default async (req) => {
   const isBelowThreshold = url.searchParams.get('belowThreshold') === '1';
   const lookupSlug = (url.searchParams.get('slug') || '').trim().toLowerCase();
   const lookupId = (url.searchParams.get('id') || '').trim();
+  const wantsPreview = url.searchParams.get('preview') === '1';
 
   if (req.method === 'GET') {
     let list = [];
@@ -188,7 +189,15 @@ export default async (req) => {
       if (!match && lookupSlug) {
         match = list.find((p) => p && slugify(p.name) === lookupSlug);
       }
-      const visible = match && (match.publishedToSelection === true || match.publishedToBelowThreshold === true);
+      // A founder preview link (project.html?slug=...&preview=1) resolves a
+      // project that is flagged previewReady even before it is published to a
+      // public listing. The public grid (?public=1) is unaffected: it still
+      // filters strictly on publishedToSelection below.
+      const visible = match && (
+        match.publishedToSelection === true ||
+        match.publishedToBelowThreshold === true ||
+        (wantsPreview && match.previewReady === true)
+      );
       if (!visible) {
         return new Response(JSON.stringify({ error: 'Not found' }), {
           status: 404,
