@@ -638,7 +638,8 @@ p{font-size:16px;}
       + '<p style="color:rgba(255,255,255,.74);">We walk through the criterion-level breakdown, the founder-vs-evidence gaps and the full action plan in a one-on-one investor call.</p></div>'
       + '<a href="https://calendly.com/d/d59-b26-rpg/investor-relations-via-valuex" class="btn btn-lilac">Book an investor call \u2192</a></div></div></section>';
 
-    document.getElementById('app-content').innerHTML = evalHero+coSec+summarySec+methodSec+breakdownSec+radarSec+threshSec+investorCTA;
+    var tailCTA = wantPreview ? '' : investorCTA;
+    document.getElementById('app-content').innerHTML = evalHero+coSec+summarySec+methodSec+breakdownSec+radarSec+threshSec+tailCTA;
     initTooltips();
   }
 
@@ -671,6 +672,7 @@ p{font-size:16px;}
   var params=new URLSearchParams(window.location.search);
   var wantSlug=(params.get('slug')||'').toLowerCase();
   var wantId=params.get('id')||'';
+  var wantPreview=params.get('preview')==='1';
 
   // A single project.html serves both public listings (Selection and
   // Below-Threshold): this one lookup call returns the project if — and
@@ -680,6 +682,7 @@ p{font-size:16px;}
   var qs=[];
   if(wantSlug) qs.push('slug='+encodeURIComponent(wantSlug));
   if(wantId) qs.push('id='+encodeURIComponent(wantId));
+  if(wantPreview) qs.push('preview=1');
   if(!qs.length){ showNotFound(); }
   else {
     fetch('/.netlify/functions/projects?'+qs.join('&'))
