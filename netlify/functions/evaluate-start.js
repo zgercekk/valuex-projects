@@ -28,11 +28,12 @@
 // provisioning, same as before.
 
 import { getStore } from '@netlify/blobs';
+import { requireUser, unauthorized } from './_auth.js';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
 const JOB_STORE = 'valuex-eval-jobs';
@@ -41,13 +42,18 @@ function makeJobId() {
   return 'job_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
 }
 
-export default async (req) => {
+export default async (req, context) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: cors });
   }
   if (req.method !== 'POST') {
     return new Response('Method not allowed', { status: 405, headers: cors });
   }
+
+  // Starting a job kicks off a paid Anthropic call in the background, so
+  // this is never open to unauthenticated callers.
+  const user = await requireUser(req, context);
+  if (!user) return unauthorized(cors);
 
   let body;
   try {
