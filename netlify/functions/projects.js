@@ -32,6 +32,7 @@
 // drag-and-drop of static files, since that skips `npm install`.
 
 import { getStore } from '@netlify/blobs';
+import { requireUser, unauthorized } from './_auth.js';
 
 const STORE_NAME = 'valuex-projects';
 const KEY = 'list';
@@ -39,7 +40,7 @@ const KEY = 'list';
 const cors = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
 // Fields exposed to the public pages (Selection and Below-Threshold alike).
@@ -147,7 +148,7 @@ function toPublicShape(p) {
   return out;
 }
 
-export default async (req) => {
+export default async (req, context) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: cors });
   }
@@ -159,6 +160,17 @@ export default async (req) => {
   const lookupSlug = (url.searchParams.get('slug') || '').trim().toLowerCase();
   const lookupId = (url.searchParams.get('id') || '').trim();
   const wantsPreview = url.searchParams.get('preview') === '1';
+
+  // Only the internal-use paths require a signed-in user: the full,
+  // unfiltered list (GET with none of the public query flags) and any
+  // write. The public/belowThreshold/slug|id lookup paths stay open on
+  // purpose -- they're read by unauthenticated pages (selection.html,
+  // below-threshold.html, project.html).
+  const isInternalRead = req.method === 'GET' && !isPublic && !isBelowThreshold && !lookupSlug && !lookupId;
+  if (isInternalRead || req.method === 'POST') {
+    const user = await requireUser(req, context);
+    if (!user) return unauthorized(cors);
+  }
 
   if (req.method === 'GET') {
     let list = [];

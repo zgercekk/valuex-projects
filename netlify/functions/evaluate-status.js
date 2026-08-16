@@ -27,11 +27,12 @@
 // worker never ran at all.
 
 import { getStore } from '@netlify/blobs';
+import { requireUser, unauthorized } from './_auth.js';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
 const JOB_STORE = 'valuex-eval-jobs';
@@ -41,13 +42,17 @@ const JOB_STORE = 'valuex-eval-jobs';
 // with a generic "taking too long" message.
 const STALE_MS = 10 * 60 * 1000; // 10 minutes
 
-export default async (req) => {
+export default async (req, context) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: cors });
   }
   if (req.method !== 'GET') {
     return new Response('Method not allowed', { status: 405, headers: cors });
   }
+
+  // Job results are internal-only, same as the evaluation itself.
+  const user = await requireUser(req, context);
+  if (!user) return unauthorized(cors);
 
   const url = new URL(req.url);
   const jobId = (url.searchParams.get('jobId') || '').trim();
