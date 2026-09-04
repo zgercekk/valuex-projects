@@ -1872,7 +1872,17 @@ function showAuthedUI(user) {
   if (nameEl) nameEl.textContent = name;
   if (emailEl) emailEl.textContent = email;
   if (avatarEl) avatarEl.textContent = name.slice(0, 2).toUpperCase();
+  // Only now — once Identity has confirmed a real signed-in user — do we
+  // touch project data at all. See the comment where these used to fire
+  // unconditionally at the bottom of this script.
+  if (!__dataLoadStarted) {
+    __dataLoadStarted = true;
+    renderSidebarRecent();
+    loadProjectsFromCloud();
+    setInterval(loadProjectsFromCloud, 30000);
+  }
 }
+var __dataLoadStarted = false;
 function showAuthGate() {
   document.body.classList.remove('authed');
 }
@@ -1885,7 +1895,15 @@ function showAuthGate() {
   }
   widget.on('init', function (user) { user ? showAuthedUI(user) : showAuthGate(); });
   widget.on('login', function () { widget.close(); window.location.reload(); });
-  widget.on('logout', function () { window.location.reload(); });
+  widget.on('logout', function () {
+    // Clear the local project cache on sign-out — it holds full internal
+    // data (evidence, contradictions, reviewer notes), and this may be a
+    // shared machine. The server remains the source of truth regardless;
+    // this only prevents a stale local copy from sitting in this browser's
+    // storage after the user has signed out of it.
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    window.location.reload();
+  });
   widget.on('error', function (err) { console.error('Netlify Identity error:', err); });
   document.getElementById('auth-gate-login').addEventListener('click', function () { widget.open('login'); });
   document.getElementById('sf-logout').addEventListener('click', function () { widget.logout(); });
@@ -6245,12 +6263,13 @@ document.getElementById('btn-decision').addEventListener('click', function(){
   else toast('No active project', '!');
 });
 
-// Initial library render on page load
-renderSidebarRecent();
-// Pull the shared library from the server, then keep it fresh in the background
-// so a project evaluated in one browser shows up for everyone else too.
-loadProjectsFromCloud();
-setInterval(loadProjectsFromCloud, 30000);
+// Initial library render + cloud sync now start only once Identity confirms
+// a signed-in user (see showAuthedUI below) — not unconditionally on page
+// load. Firing these before auth resolves meant getProjects() would read
+// straight from localStorage (a full local cache of internal project data:
+// evidence, contradictions, reviewer notes) and render it into the DOM
+// underneath the auth-gate overlay, which is purely visual — inspectable
+// via devtools by anyone on a shared machine, logged in or not.
 </script>
 
 </body>
