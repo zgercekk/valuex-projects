@@ -103,7 +103,10 @@ function stageLabel(stage) {
 }
 
 function bandLabel(band) {
-  if (band === 'top') return 'top-tier';
+  // Band keys are now: weak / promising / strongly-promising / outstanding
+  // (see vxBand() in valuex-workstation.html). The generic hyphen-to-space
+  // fallback already reads naturally for all four, so no special case
+  // is needed here.
   return String(band || '').replace(/-/g, ' ') || 'evaluated';
 }
 
