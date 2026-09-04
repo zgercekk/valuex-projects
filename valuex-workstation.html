@@ -5435,7 +5435,20 @@ function queueCloudSync(list) {
 // is still empty but this browser already has projects saved locally (e.g.
 // the very first run after this update goes live), those are pushed up so
 // nothing gets lost and every browser converges on the same library.
+//
+// __syncInFlight guards against overlapping calls: this runs on a 30s
+// setInterval (see the Identity login handler), which does not wait for the
+// previous call to resolve before firing the next one. If a single call
+// were ever slow (a sluggish network, a slow cold-start on the function),
+// calls would stack up against the same origin indefinitely. That's exactly
+// what happened when requireUser() in _auth.js had no timeout on its own
+// upstream call — see the fix there. This guard is the client-side half of
+// the same fix, so the same class of pile-up can't recur even if some other
+// future call happens to be slow for an unrelated reason.
+var __syncInFlight = false;
 function loadProjectsFromCloud() {
+  if (__syncInFlight) return Promise.resolve();
+  __syncInFlight = true;
   return authHeaders().then(function (headers) { return fetch(PROJECTS_API, { headers: headers }); })
     .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(function (remoteList) {
@@ -5456,7 +5469,8 @@ function loadProjectsFromCloud() {
       __cloudSyncOK = false;
       setCloudSyncBadge('offline');
       console.warn('Could not reach the shared project store; showing this browser\u2019s local copy only.', e);
-    });
+    })
+    .finally(function () { __syncInFlight = false; });
 }
 function makeProjectId() { return 'PRJ-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6).toUpperCase(); }
 
@@ -6281,4 +6295,3 @@ document.getElementById('btn-decision').addEventListener('click', function(){
 
 </body>
 </html>
-  
