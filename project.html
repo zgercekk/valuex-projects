@@ -132,7 +132,11 @@ p{font-size:16px;}
 .g-band{font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:.06em;fill:rgba(255,255,255,.4);}
 .g-band.on{fill:var(--violet-bright);font-weight:600;}
 .verdict{display:inline-flex;align-items:center;gap:8px;margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:12px;
-  letter-spacing:.04em;color:#e6c98a;border:1px solid rgba(230,201,138,.4);border-radius:8px;padding:7px 13px;}
+  letter-spacing:.04em;border-radius:8px;padding:7px 13px;border:1px solid transparent;}
+.verdict.weak{color:#e08585;border-color:rgba(224,133,133,.4);}
+.verdict.promising{color:#e0c25e;border-color:rgba(224,194,94,.4);}
+.verdict.strongly-promising{color:#7fcb99;border-color:rgba(127,203,153,.4);}
+.verdict.outstanding{color:#b58ef5;border-color:rgba(181,142,245,.4);}
 .thresh-note{margin-top:14px;font-size:13px;color:rgba(255,255,255,.66);}
 .thresh-note b{color:var(--violet-bright);}
 
@@ -386,9 +390,12 @@ p{font-size:16px;}
   }
   function bandFor(score){
     if(score<200) return 'WEAK';
-    if(score<240) return 'WEAKLY PROMISING';
-    if(score<300) return 'PROMISING';
-    return 'TOP';
+    if(score<240) return 'PROMISING';
+    if(score<300) return 'STRONGLY PROMISING';
+    return 'OUTSTANDING';
+  }
+  function bandClass(band){
+    return String(band||'').toLowerCase().replace(/\s+/g,'-');
   }
   function escapeHTML(s){
     return String(s==null?'':s).replace(/[&<>"']/g,function(c){
@@ -441,10 +448,10 @@ p{font-size:16px;}
   }
   function buildGaugeSVG(score){
     var pt=gaugePoint(score), band=bandFor(score);
-    var labels=[['WEAK',77,65],['WEAKLY PROMISING',246,20],['PROMISING',324,66],['TOP',368,144]];
+    var labels=[['WEAK',77,65],['PROMISING',246,20],['STRONGLY PROMISING',324,66],['OUTSTANDING',368,144]];
     var texts=labels.map(function(l){
       var cls = (l[0]===band) ? 'g-band on' : 'g-band ';
-      var style = (l[0]==='WEAKLY PROMISING') ? ' style="font-size:9px;"' : '';
+      var style = (l[0]==='STRONGLY PROMISING') ? ' style="font-size:9px;"' : '';
       return '<text x="'+l[1]+'" y="'+l[2]+'" class="'+cls+'" text-anchor="middle"'+style+'>'+l[0]+'</text>';
     }).join('');
     var s=fmtScore(score);
@@ -590,7 +597,7 @@ p{font-size:16px;}
       + '<div class="wrap"><div class="crumb"><a href="selection.html">Selection</a> \u00b7 <a href="selection.html">Projects</a> \u00b7 <span>'+escapeHTML(name)+'</span></div>'
       + '<div class="eh-grid"><div><div class="eh-chips">'+chips+'</div><h1 class="eh-name">'+escapeHTML(name)+'</h1>'
       + '<div class="eh-meta"><span>STAGE <b>'+escapeHTML(project.stage||'\u2014')+'</b></span><span>TOKEN <b>'+(project.token?'Yes':'No')+'</b></span><span>PROFILE <b>'+escapeHTML(project.profile||'TECHX')+'</b></span><span>RUN <b>'+(project.lastRunAt?new Date(project.lastRunAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'\u2014')+'</b></span></div>'
-      + '<div class="verdict">\u25c8 '+band+'</div>'
+      + '<div class="verdict '+bandClass(band)+'">\u25c8 '+band+'</div>'
       + '<div class="thresh-note">Total <b>'+fmtScore(score)+' / 360</b> \u00b7 '+band.toLowerCase()+' \u00b7 '+(above?'above':'below')+' the <b>200</b> listing line.</div></div>'
       + '<div class="eh-card">'+buildGaugeSVG(score)+'<div style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;letter-spacing:.12em;color:rgba(255,255,255,.5);margin-top:4px;">VALUEX SCORE</div></div>'
       + '</div></div></section>';
