@@ -84,6 +84,22 @@ input, textarea, select { font-family: inherit; }
 .side-foot .avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--purple); color: #fff; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; font-weight: 700; }
 .side-foot .who b { font-size: 12px; display: block; color: var(--text); }
 .side-foot .who small { font-size: 10px; color: var(--text-3); font-family: var(--mono); }
+.side-foot .sf-logout { margin-left: auto; width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--text-3); font-size: 13px; flex-shrink: 0; }
+.side-foot .sf-logout:hover { background: var(--panel-2); color: var(--text); }
+
+body:not(.authed) .app { display: none; }
+.auth-gate { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; background: var(--bg); }
+body.authed .auth-gate { display: none; }
+/* Netlify Identity's widget iframe ships with a hardcoded z-index: 99,
+   which sits underneath .auth-gate (9999) and renders invisibly. */
+#netlify-identity-widget { z-index: 10000 !important; }
+.auth-gate-card { width: 320px; text-align: center; padding: 40px 36px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow-lg); }
+.auth-gate-card img.wm { height: 18px; width: auto; display: block; margin: 0 auto 22px; }
+.auth-gate-card h1 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+.auth-gate-card p { font-size: 12px; color: var(--text-2); line-height: 1.5; margin-bottom: 22px; }
+.auth-gate-btn { width: 100%; padding: 10px; background: var(--purple); color: #fff; font-weight: 700; font-size: 12px; border-radius: 7px; box-shadow: var(--shadow-sm); }
+.auth-gate-btn:hover { background: var(--purple-2); }
+.auth-gate-status { margin-top: 14px !important; font-family: var(--mono); font-size: 10.5px; color: var(--text-3) !important; min-height: 14px; }
 
 .main { grid-area: main; overflow-y: auto; }
 .view { display: none; }
@@ -959,6 +975,18 @@ a.comp-name:hover { color: var(--purple); text-decoration: underline; }
 </head>
 <body>
 
+<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+
+<div class="auth-gate" id="auth-gate">
+  <div class="auth-gate-card">
+    <img class="wm" id="auth-gate-wm" alt="VALUEX">
+    <h1>VALUEX Workstation</h1>
+    <p>Sign in with your VALUEX account to access the evaluation workstation.</p>
+    <button class="auth-gate-btn" id="auth-gate-login">Log in</button>
+    <p class="auth-gate-status" id="auth-gate-status"></p>
+  </div>
+</div>
+
 <div class="app">
 
   <aside class="sidebar">
@@ -983,8 +1011,9 @@ a.comp-name:hover { color: var(--purple); text-decoration: underline; }
       </div>
     </div>
     <div class="side-foot">
-      <div class="avatar">VX</div>
-      <div class="who"><b>VALUEX Reviewer</b><small>internal</small></div>
+      <div class="avatar" id="sf-avatar">VX</div>
+      <div class="who"><b id="sf-name">VALUEX Reviewer</b><small id="sf-email">internal</small></div>
+      <button class="sf-logout" id="sf-logout" title="Log out">⏻</button>
     </div>
   </aside>
 
@@ -1823,6 +1852,77 @@ const WORDMARK = "iVBORw0KGgoAAAANSUhEUgAAAZAAAAAvCAYAAADNVJzYAAAxZklEQVR4nO2de5
 const XICON = "iVBORw0KGgoAAAANSUhEUgAAAHgAAAB4CAYAAAA5ZDbSAAARFklEQVR4nO2de3Bc1X3HP7+7K8sPZEkYuyQhIyWURzOdElr6YEoswMckIYVpSBqaabuxrbUgpCWkbjsEvLakLcaZxkxmWvO0LFhokpmmU8CkNHCArJmhTJNQzKRJE0JAoR0eNbb8tqTd++sfd6+0ki157927D5H7mdmxLWvvPff87jm/c873/H4HYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiKkKivJi1VkrX1Eq/k8shXV04PT0UjTEVf6+ZsdZKPk+ip4diwK8KoDPrwWLFYNRaK/O6jiw20heuEUTzDFZsxia3bbMt1V4pkgr136wdGXumI3zZhQ+iFMWZ8Ysu4Ez/twqCsge4I501o/P5LS2rhw7gLxEuEC31Zv5zuzP+Tqm7ExIorwJbumHv68LlqrQWhTF3jB+/c5i9K5ZzabrfPB6kjpJRPtxInjsVPilwDEj4DzCNGT8TRVW4GmXlA1vsx3M5xqy1zDcjW2sll0Me2GIXFsZ4GKUHZQy/EZU/98w68P4oAouAs0zWXDO02b5cnKBNWlmUWMQlZyxgr7q0BS3XzDYWGIv3Nu35DosULlRlH8ohFQ5U+DkoLm8I9BTG2JbLGTefJ1FtuepNPk8ilzPuxDHuUJceXN5Q4WCl9YBySGEfcKG11mkRCk4SpzDOXoq82iIccISfAWAqL1fVBjYYTaWss+HvzFHgSRFOR3BREpV+VGgF3laX64Zutb3ZrClkMjay3qXWZDI2mc2awr0bbVqgT+BtFVqD1AGCK8LpwL8ZY9z3tvHmgRH+65xl/CKdNc+vHTT/oS4/Aq/OKy1bZD4Y4IfP0dE2wTMK5yAcQQO0RFFFRURIiMOqdf3mBzZlHZMzJ+vomwa/jPdm7EUJeEqh4D9LxRcRiihLRPipKpd193DghJF0yLFJZKPWVMo6uZxxd2Tsh0V4GhfUUTfMgwI/P3yUlb/+cUaBpvXH/ov9+nN0FCd4FvhAmBdbXHFwwC1y2frbzB6/LqMoY9VdtE8uZ9xMxibTWfOiwE0qtItKsHmgVzGHRfi1tiVsN8ZoM/vjfJ6EMUbdCe5COB84HMi4gKgUvbrii+tvM3syGZuMyrgQoYEBfN+5btDkHIftwAqgEPAySVXeAT47tMluaFZ/7PvdoU32rxCuxStz0HIW8Opo+7qsedC/ZpTljHxhwVor5JDXulgAPCnw28ABDfzwqiKyWJVPpLPmGWutY0xz+GO/LPdutKsSDrtU9SgEcEWAeMZtV/gesLp7hHFSJ65iVUukLRg8f5kD0llzvAhrEfYBraCBCi4irroUgJ133mLfZ4xxfZ/XSEqDHffujD0r6XCfuhREJOCLp4rQirAvUWRNOmuO56jNWKNmFea/5fdtslcL+i1BRjWof4KCqnaKyFOvwVU9PbgYNMg0IUosVrBIPo/TDY8BlwGjQXsnEYqKdjiOfGpdv9lVy94p8hbsY4w36Fo/aB5FZSuwnID+WCGJyH6Ej3UL/cYYN59p3KArnyFhjHG7HQYRPqohjItXB8sdZMu6frMrk7HJWrqeGnd5VqxFcjlY2cWjInoFKvsDV4pQFLRDVa5NZ82/1GIwcir8Vja0yV4D+k11ZRQJ3iMh2qkqT+we4epUCoxBqWGPVLMW7GEU0NKwP60qryMsEgkoo6k6qBwF7r53sz0nmzWFVMrWuOxTpFIld3OrPQ/lLlSOIhro/iIUERaBjADpUp3U1LhQcwN7AwdrrZPOmjdVWKtKAg1WOaUR6phAe0J54IEv2EUwtdBQS/x7bPtru9hJcL9COzAWdNSMqqNKwoXedNa8WeoRaj6WqEsrKPPHux3hFkSWSQh/rHAA5eLx0+snSvgiQsdCtqH8HiGmfF7XLMsc4Zb1g2Z3rf3ujHvXD9937sjYh0T4Yw2xOCBQUDgDSKezZriW/rhcRHCEewT2hhlUibBM4OvrBk2q3uOHuhrY7+5e+T5tySPsDiVKoAqeKFEosuq622ojSkQtIhQW03P2RRyC+q6t133hwF9IvytjP7zAFyVE3UA+rUyUAD7S3cMBiK7iohYRVLk8nTUvNkIdq9tI1McXJT6fNS+KwxdVaBfCixICd0YtSvgiQnGcu6E6EcGFm9JZ82ImY5ONkD7rbmAoEyX6zYPAdqQKUUKiFSXKRQRx+AyEFBGEMxzYvn7Q5Boxb/dp2NpuuSghwndQfpcGixJlixmXA49VJSII30NZvXuE8VSuccurDWnBMF2UcAqsQ9iHhBclRBja2W/fE1aUKBcRUIZKQkdApkSEorI2nTXHIdgWm6hpBnXGMca4OzP2Klf1n8WpTpToGuET+S6cnhFcchVuwE8h+S7vZe/2Wu7lIsGXVH0RQZFPrx80jzaya54sUyNv7jM5P95k+wU2o7ypsCDgZQoirEC4vXfA3BKmHEOb7e0oN6vyNsHn5+MIZ6qSTWfNpmYwbqlczcCUKHFpN4+4ypUivHWykauiidn8oghFVZaifE0S3NN2nHf2Ax2nnbwljx5GOjvhnYMsb0lwncCNCAdn70FUTzri9+77K8Dj9RIRKqVJDDw9OkKEf0W5UE/YIg4IR4Djs09bVEVYisp+hFE9xTMKKEqHp/JwcNZBlSeQLCzNv2dew0H4T1WuLK0zN010RtMYGKaMfM9WuzRxhD9ReL9AURRRQYEOEVahnK3KgVnlOi9sJqluZd2sOBTUpTDn9YR2hFdUeQoY9cskgqjyv8A3mjH0pqkMDKfe/zs8aDvdCe5S+COBt+f21ZWOyGefCgmMK6wQ4VtOkuvXbjL7w5a9ETSdgWEq/HLmz3sAkzWFO2+yC1rbeBThoyhvUqvpnuACZyr6xPhBueqGr5lxm7HJ/El+tVnDX5vSwHPhr+eWWvI3EIxqbZ5DBFVXnzpWkM/+xVazbz5EWsxk3hkYyrtCKzs2coUDH4i61h0HXJdX05fyBOZdEHw936jnFtpm2K4blnlbcB9rrZPP18YH94zgzrcuOeaXjHnZglMp6/iJW+pxv3yexMgIbpRBYTGzUM/tss1077DMqxY8GfS12f6G47Je4FeB2jyFTvvrzxJwz9qs+WEzBcFVwrwxsM3YpMmawn2b7NWO8qDCaQITNX8Cz9AtCocd+NN1WbPLL0uN7xwJTWNgf4fHyf5vzwUkNmwwE/fcan8/meDbpR8fAxK1npgKgFJUWCygCFf2Dprntm2zLRfsmWUMUIMw0LA0hYErWSHa2W9/yy3yMEo7zlxqUo0oqUkCo4Uin7zuNvODuX69WVa9Gm5gf4VoeNB2Fic4z0mQYAIo5XgTlyWucqlCrxfbU4FxheJkArIKKSVkO+V18STDYwpDSeG76nAEwC+zW6QI/HezKEsNNXDZJrdelE0KZ5S6RCmVThESqrSIcED1VPunVVXFEfQ0RKYZqzyBpn8Bnf7VIiKH/I31c91DRBxV2kWYQCn65S1JmpQiIPrTWTPc6EFZwwxctj31GpR/Ag6rMHZCYJqIK4oimtC5ogq8zfCLRfQ4KhaHn6tb2TxZHBK4fFBhNdCKcHSu1ixehEPRa/XTyysiLkorcJrj8Km1A+bhX7pts350w30D9jynwG6EFoVCaL/qdcmLEX5RKPJnp/KPszGcsRep8KCrvF+Eo0E3/80ozwKEY0VhZd+AeTnK1EjBilJn/JyOq86ntXCcp4EL1OVw0GDqKbwuE9CEcNmaAfPSbJrtXPha89Bm+5u4PA0UNWgs0rRiURRhqTh8P7GX1U8dYizVgNF13dMTlcIxCz0Ze4fC7wB7kfDlEKSoSqc4fG7NgHlpW8q2mKyZCHqdLLAtZVt6B8wLOzL2S8AOUQkTTegXLKFwAJeLC8v4am67+UJXl00SPIKjKuq69DbpdzfbtHo5HfdSxUsmwjjCCpR/6B0wD2UyNrkhF9y4PhtyZqKUzG1YhLsJl+ernCSwV5Xrd2Ts2kbk/KqfphpFOGYZXlA17SjPj72HK859ngIRhIj4LuT8NlpXnM6TAhepcjC0CxFVURGEBMLlvQPmhXrOkevSgq21QgodHrSdDtzvZc+hGNq/oaqwUJV3cFh7ww1mPEc0ISK+j7xluznmTrAW2C/CgqAhNVNFFVFv33QLyv3DG2wnKbRemwjqYuDJcMxC+HDMckTEFVgoSl/vgHnV2mhHqH6Ia99W87I6fB7RxQROdlZGKdxV4UPu4vrm4Ky5gaeFYxI6HLOcArBchS29f2u+Xat8F76/TA+Yh1XlKxIiz9cMktQg3PVU1LSbKJP3ViU0XE7Hcvw8UyCPd63kDwGp7SqRF1JDDka62aXoagmT52sa9c3BWbMWXB6OmVB2oIQe3YIfuccSVRkpLqDPeGntazyn9PJ8mZxxxSEtyP9omDxfZYiIq16g3FA9cnDWyMDe+Uk2Y5MtsAPlvcDxsK1XRFWVhAi4sK5vo3nLpqjLQr6f52tdv3lDlV6BpAbO8zWFKglRjqG8rzXBDmutAwg1OlKoJgbOlHI6jlSX03EKlaIIp7vKl/uy5tl657vw83yls+YZUW4VkWVU4Y9LOb9GET428l0GvevXZtAV+VtTllvq047wTYR9VWq3BeAMER7qHTSfa+TCvX/v+zL2647wmTB5vqZRhxyckRq47NyG8wXyQKuihdADK2/RfgnCTwpjXHr26vrnmSpn8vCRx+loW0JelbOD5/kqR1WQJMKx4jgr+7ZGL0pE1kWX53QUYVihXZXx8KNmVfEWRMYSwprrvmIO5nL18buzYYxRcshN28x+hDUlPTiBhFwE8YTHcZTOZCvDD2yJPgdnZAY+WU7H8ArRpIjQjnDjmgHzUtSHVYTFlBZBegfMC6p8CegIfPhIOSVRQl0uLhznq1Hn4IzEwOUiAtAHwXNczKCAl29jUkRohnwXPpOLIPNAlKi6K6iFiKDQIfDvY4e44tx9FJppl6LPpK7dRutESZQgVJ6vEqKqrjiOgxNlDs6qDDwzp6MI3crc213mRhWkBTgsDpf0DphXG7UTohL8st17sz0nsYDdKIuqHVSWkpe+cugIPVEcDFZVFz1TRFCtZkRZexEhaqaJElISJbR6UQL4UFtEokRoA0/NCZ/8myhFBBxuq6WIEDUniBJO9aJElDk4Q3Ulk9tdN9pV4rDLrYmI0Bx5piqjeUWJwC24XERQYacb6mCoKcoOq3itOEFfyd/MI+NCrUWJanJwBjJw6Xx6yZREBIEzRTgWenspAN5hFUWlt+9285ZN1eewiqg5QZRQElGIEurqWVpkZ1hRIlgBPAXH7YJsJCICFECWCdzcCBEhaspFCYWNUYgS/sFgI7s9UcKmgrnVin/Zn5NNHgyFjL5bRISoKdvF8o/AtVGLEkHmxwHeBit33kRL61KeV+U8EY6E7pqVIsISR/jJRBOICFHj+8rX8rQj7EY5G+VI+J2Zk2dU/Li7g4vNBgqVjlEq6qI932uUZbQCHaKMqaJ4A6RAn9Je5gUijDlNIiJEjS9KpLNmVEqihDgkS88euM7w1gXHgM4fjdIKRm2FvrgiAxuMplLWuSFjDqE8gkOnQLtosA/eZ7kICwWuXzNgXmr2xYywlIsSuPy5oqehLCdgnYnSLt5pa53i8MiNWXM4lbJOpVuEK/fB3tGq/PQxWlqXcqMql4icJN3vbHjFcRT+T4Th3kHzXLMESdeSsrX6jyQdUuqyHHCDOEdVHBGeHTvI35/7B0xgDKbm+9GqZD5njwtKI581xI2tZDJe3qhUKtRbJOS8LizEd+ctNmUdUkCIlpfLIV1dOO+WWUZMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTFPy/5b9TXw+9TU0AAAAAElFTkSuQmCC";
 document.getElementById('brand-wm').src = "data:image/png;base64," + WORDMARK;
 document.getElementById('empty-x').src = "data:image/png;base64," + XICON;
+document.getElementById('auth-gate-wm').src = "data:image/png;base64," + WORDMARK;
+
+// =====================================================================
+// NETLIFY IDENTITY · login gate
+// =====================================================================
+// The whole app below sits behind this gate. The gate itself is purely a
+// client-side UX layer — the real access control is on the server, in the
+// Netlify Functions this page calls (projects.js, evaluate.js,
+// evaluate-start.js, evaluate-status.js), which all reject requests
+// without a valid Identity token regardless of what this page does.
+function showAuthedUI(user) {
+  document.body.classList.add('authed');
+  var name = (user && user.user_metadata && user.user_metadata.full_name) || (user && user.email) || 'VALUEX Reviewer';
+  var email = (user && user.email) || '';
+  var nameEl = document.getElementById('sf-name');
+  var emailEl = document.getElementById('sf-email');
+  var avatarEl = document.getElementById('sf-avatar');
+  if (nameEl) nameEl.textContent = name;
+  if (emailEl) emailEl.textContent = email;
+  if (avatarEl) avatarEl.textContent = name.slice(0, 2).toUpperCase();
+  // Only now — once Identity has confirmed a real signed-in user — do we
+  // touch project data at all. See the comment where these used to fire
+  // unconditionally at the bottom of this script.
+  if (!__dataLoadStarted) {
+    __dataLoadStarted = true;
+    renderSidebarRecent();
+    loadProjectsFromCloud();
+    setInterval(loadProjectsFromCloud, 30000);
+  }
+}
+var __dataLoadStarted = false;
+function showAuthGate() {
+  document.body.classList.remove('authed');
+}
+(function () {
+  var widget = window.netlifyIdentity;
+  var statusEl = document.getElementById('auth-gate-status');
+  if (!widget) {
+    if (statusEl) statusEl.textContent = 'Netlify Identity failed to load — check your connection and reload.';
+    return;
+  }
+  widget.on('init', function (user) { user ? showAuthedUI(user) : showAuthGate(); });
+  widget.on('login', function () { widget.close(); window.location.reload(); });
+  widget.on('logout', function () {
+    // Clear the local project cache on sign-out — it holds full internal
+    // data (evidence, contradictions, reviewer notes), and this may be a
+    // shared machine. The server remains the source of truth regardless;
+    // this only prevents a stale local copy from sitting in this browser's
+    // storage after the user has signed out of it.
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    window.location.reload();
+  });
+  widget.on('error', function (err) { console.error('Netlify Identity error:', err); });
+  document.getElementById('auth-gate-login').addEventListener('click', function () { widget.open('login'); });
+  document.getElementById('sf-logout').addEventListener('click', function () { widget.logout(); });
+  widget.init();
+})();
+
+// Returns a headers object carrying the current Identity user's JWT, or {}
+// if signed out. user.jwt() (not the cached user.token.access_token)
+// transparently refreshes an expired token before returning it.
+async function authHeaders() {
+  var user = window.netlifyIdentity && window.netlifyIdentity.currentUser();
+  if (!user) return {};
+  try {
+    var token = await user.jwt();
+    return { Authorization: 'Bearer ' + token };
+  } catch (e) {
+    return {};
+  }
+}
 
 function toast(msg, ic) {
   var t = document.getElementById('toast');
@@ -3100,7 +3200,7 @@ async function scanPublicSignals() {
   try {
     var resp = await fetch(EVAL_ENDPOINT, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: Object.assign({ 'Content-Type': 'application/json' }, await authHeaders()),
       body: JSON.stringify({
         model: 'claude-sonnet-5',
         max_tokens: 1200,
@@ -3403,7 +3503,7 @@ async function runVALUEXEvaluation() {
     // flow did. ----
     var startResp = await fetch(EVAL_START_ENDPOINT, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: Object.assign({ 'Content-Type': 'application/json' }, await authHeaders()),
       body: requestBodyStr
     });
     if (!startResp.ok) {
@@ -3437,7 +3537,7 @@ async function runVALUEXEvaluation() {
 
       var statusResp;
       try {
-        statusResp = await fetch(EVAL_STATUS_ENDPOINT + '?jobId=' + encodeURIComponent(jobId), { method: 'GET' });
+        statusResp = await fetch(EVAL_STATUS_ENDPOINT + '?jobId=' + encodeURIComponent(jobId), { method: 'GET', headers: await authHeaders() });
       } catch (pollNetErr) {
         // Transient network hiccup while polling — keep trying rather than
         // aborting the whole evaluation over one dropped poll.
@@ -5313,10 +5413,10 @@ function setProjects(list) {
 // has already been updated synchronously above, so the UI never blocks on this).
 function queueCloudSync(list) {
   clearTimeout(__syncTimer);
-  __syncTimer = setTimeout(function () {
+  __syncTimer = setTimeout(async function () {
     fetch(PROJECTS_API, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: Object.assign({ 'Content-Type': 'application/json' }, await authHeaders()),
       body: JSON.stringify(list)
     }).then(function (r) {
       __cloudSyncOK = !!(r && r.ok);
@@ -5336,7 +5436,7 @@ function queueCloudSync(list) {
 // the very first run after this update goes live), those are pushed up so
 // nothing gets lost and every browser converges on the same library.
 function loadProjectsFromCloud() {
-  return fetch(PROJECTS_API)
+  return authHeaders().then(function (headers) { return fetch(PROJECTS_API, { headers: headers }); })
     .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(function (remoteList) {
       __cloudSyncOK = true;
@@ -6170,12 +6270,13 @@ document.getElementById('btn-decision').addEventListener('click', function(){
   else toast('No active project', '!');
 });
 
-// Initial library render on page load
-renderSidebarRecent();
-// Pull the shared library from the server, then keep it fresh in the background
-// so a project evaluated in one browser shows up for everyone else too.
-loadProjectsFromCloud();
-setInterval(loadProjectsFromCloud, 30000);
+// Initial library render + cloud sync now start only once Identity confirms
+// a signed-in user (see showAuthedUI below) — not unconditionally on page
+// load. Firing these before auth resolves meant getProjects() would read
+// straight from localStorage (a full local cache of internal project data:
+// evidence, contradictions, reviewer notes) and render it into the DOM
+// underneath the auth-gate overlay, which is purely visual — inspectable
+// via devtools by anyone on a shared machine, logged in or not.
 </script>
 
 </body>
