@@ -426,10 +426,10 @@ body.authed .auth-gate { display: none; }
 .eval-head .chip.profile b { color: var(--purple-2); }
 .eval-head .score-block { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
 .eval-head .score-num { font-family: var(--mono); font-size: 38px; font-weight: 800; line-height: 1; }
-.eval-head .score-num.promising { color: var(--amber); }
-.eval-head .score-num.top { color: var(--green); }
+.eval-head .score-num.strongly-promising { color: var(--amber); }
+.eval-head .score-num.outstanding { color: var(--green); }
 .eval-head .score-num.weak { color: var(--red); }
-.eval-head .score-num.weakly-promising { color: var(--amber); }
+.eval-head .score-num.promising { color: var(--amber); }
 .eval-head .score-meta { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); }
 .rec-pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 5px; font-family: var(--mono); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
 .rec-pill::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
@@ -478,10 +478,10 @@ body.authed .auth-gate { display: none; }
 .gauge-wrap { display: flex; flex-direction: column; align-items: center; padding: 8px 0 4px; }
 .gauge-svg { width: 220px; height: 130px; }
 .gauge-num { font-family: var(--mono); font-size: 38px; font-weight: 800; line-height: 1; margin-top: -86px; }
-.gauge-num.promising { color: var(--amber); }
-.gauge-num.top { color: var(--green); }
+.gauge-num.strongly-promising { color: var(--amber); }
+.gauge-num.outstanding { color: var(--green); }
 .gauge-num.weak { color: var(--red); }
-.gauge-num.weakly-promising { color: var(--amber); }
+.gauge-num.promising { color: var(--amber); }
 .eval-head .score-num.exceptional, .gauge-num.exceptional, .eval-head .score-num.strong, .gauge-num.strong { color: var(--green); }
 .eval-head .score-num.promising, .gauge-num.promising, .eval-head .score-num.watchlist, .gauge-num.watchlist { color: var(--amber); }
 .eval-head .score-num.below, .gauge-num.below { color: var(--red); }
@@ -613,15 +613,15 @@ body.authed .auth-gate { display: none; }
 .lib-card-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
 .lib-card-score { font-family: var(--mono); font-size: 30px; font-weight: 800; line-height: 1; }
 .lib-card-score.weak { color: var(--red); }
-.lib-card-score.weakly-promising { color: var(--amber); }
 .lib-card-score.promising { color: var(--amber); }
-.lib-card-score.top { color: var(--green); }
+.lib-card-score.strongly-promising { color: var(--amber); }
+.lib-card-score.outstanding { color: var(--green); }
 .lib-card-rating { font-family: var(--mono); font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 4px; }
 .lib-card-band { padding: 4px 9px; border-radius: 4px; font-family: var(--mono); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
 .lib-card-band.weak { background: rgba(217,104,95,0.12); color: var(--red); }
-.lib-card-band.weakly-promising { background: rgba(212,162,58,0.15); color: var(--amber); }
 .lib-card-band.promising { background: rgba(212,162,58,0.15); color: var(--amber); }
-.lib-card-band.top { background: rgba(108,194,138,0.15); color: var(--green); }
+.lib-card-band.strongly-promising { background: rgba(212,162,58,0.15); color: var(--amber); }
+.lib-card-band.outstanding { background: rgba(108,194,138,0.15); color: var(--green); }
 .lib-card-conf { margin: 10px 0 12px; }
 .lib-card-conf .lab { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-3); margin-bottom: 4px; }
 .lib-card-conf .tr { height: 6px; background: var(--panel-2); border-radius: 3px; overflow: hidden; }
@@ -667,8 +667,8 @@ body.authed .auth-gate { display: none; }
 .profile-stats .stat-score { font-family: var(--mono); font-size: 48px; font-weight: 800; line-height: 1; }
 .profile-stats .stat-band { font-family: var(--mono); font-size: 10px; padding: 4px 9px; border-radius: 5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; display: inline-block; margin-bottom: 8px; }
 .stat-band.weak { background: rgba(217,104,95,0.12); color: var(--red); }
-.stat-band.weakly-promising, .stat-band.promising { background: rgba(212,162,58,0.15); color: var(--amber); }
-.stat-band.top { background: rgba(108,194,138,0.15); color: var(--green); }
+.stat-band.promising, .stat-band.strongly-promising { background: rgba(212,162,58,0.15); color: var(--amber); }
+.stat-band.outstanding { background: rgba(108,194,138,0.15); color: var(--green); }
 .stat-rating { font-family: var(--mono); font-size: 11px; color: var(--text-3); margin-top: 6px; }
 .stat-conf { font-size: 11px; color: var(--text-2); margin-top: 4px; }
 
@@ -1375,7 +1375,7 @@ a.comp-name:hover { color: var(--purple); text-decoration: underline; }
                     <div class="band-marker" id="er-band-marker" style="left:50%;"></div>
                   </div>
                   <div class="band-labels" id="er-band-labels">
-                    <span>weak</span><span>weakly promising</span><span>promising</span><span>top</span>
+                    <span>weak</span><span>promising</span><span>strongly promising</span><span>outstanding</span>
                   </div>
                 </div>
               </div>
@@ -1500,7 +1500,7 @@ a.comp-name:hover { color: var(--purple); text-decoration: underline; }
 
           <!-- Confidence Uplift — only rendered with content when eligible/applied -->
           <div class="card-ev" id="card-uplift" style="display:none;">
-            <div class="card-head"><h3>▲ Confidence Uplift <span class="help-ico" data-tip="An evidence-gated mechanism for projects that land just below the 241 Promising line (226-240) with genuinely verified strength on funding, partnerships, or regulatory status — never a blanket score boost. Only fires with V/S-tier evidence on at least 2 of those three criteria, capped at +15 points, and always flagged for reviewer sign-off before publishing.">?</span></h3><span class="meta" id="er-uplift-meta"></span></div>
+            <div class="card-head"><h3>▲ Confidence Uplift <span class="help-ico" data-tip="An evidence-gated mechanism for projects that land just below the 241 Strongly promising line (226-240) with genuinely verified strength on funding, partnerships, or regulatory status — never a blanket score boost. Only fires with V/S-tier evidence on at least 2 of those three criteria, capped at +15 points, and always flagged for reviewer sign-off before publishing.">?</span></h3><span class="meta" id="er-uplift-meta"></span></div>
             <div class="card-body" id="er-uplift-body"></div>
           </div>
 
@@ -1600,7 +1600,7 @@ red_flags      ← detect_red_flags(all_inputs)
 <span class="kw">if</span> critical_contradiction <span class="kw">or</span> critical_missing:
   recommendation ← <span class="str">"CLARIFICATION_NEEDED"</span>           <span class="cmt">// override regardless of score</span>
 <span class="kw">elif</span> total ≥ <span class="num">241</span>:
-  recommendation ← <span class="str">"LIST"</span>                          <span class="cmt">// top / elite</span>
+  recommendation ← <span class="str">"LIST"</span>                          <span class="cmt">// strongly promising / outstanding</span>
 <span class="kw">elif</span> total ∈ [<span class="num">200</span>, <span class="num">240</span>]:
   recommendation ← <span class="str">"HUMAN_REVIEW"</span>                  <span class="cmt">// borderline — reviewer signs off</span>
 <span class="kw">elif</span> total ∈ [<span class="num">121</span>, <span class="num">199</span>]:
@@ -1717,17 +1717,17 @@ red_flags      ← detect_red_flags(all_inputs)
             <div class="we-row"><div>Security (16·17)</div><div class="num">4.00</div><div class="num">0.05</div><div class="num">×60</div><div class="num">12.0</div></div>
             <div class="we-row total"><div>Total VALUEX score</div><div class="num"></div><div class="num"></div><div class="num"></div><div class="num">240.0 / 360</div></div>
           </div>
-          <div class="callout-row"><span class="tag">Reading it</span> &nbsp; 240 lands at the top of the <b>Weakly promising</b> band (200–240) — above the 200 listing line. Technology and Skill carried it; Engagement and Sales dragged. The total can never exceed 360 by construction.</div>
+          <div class="callout-row"><span class="tag">Reading it</span> &nbsp; 240 lands at the top of the <b>Promising</b> band (200–240) — above the 200 listing line. Technology and Skill carried it; Engagement and Sales dragged. The total can never exceed 360 by construction.</div>
         </div>
 
         <div class="method-block" id="m8">
           <h2><span class="step">8</span> Bands, threshold &amp; routing</h2>
-          <p class="sub">The total maps to a band, and the band drives the recommendation. Projects scoring below 200 fall short of the listing line and are routed to revisit; 200 and above pass into the Weakly promising, Promising or Top bands and are listed.</p>
+          <p class="sub">The total maps to a band, and the band drives the recommendation. Projects scoring below 200 fall short of the listing line and are routed to revisit; 200 and above pass into the Promising, Strongly promising or Outstanding bands and are listed.</p>
           <div class="bands-strip">
             <div class="band-row"><div class="range r1">0 – 199</div><div>Weak</div><div class="rec c2">Revisit later</div></div>
-            <div class="band-row threshold"><div class="range r2">200 – 240</div><div>Weakly promising</div><div class="rec c4">List</div></div>
-            <div class="band-row"><div class="range r3">241 – 300</div><div>Promising</div><div class="rec c4">List</div></div>
-            <div class="band-row"><div class="range r3">301 – 360</div><div>Top</div><div class="rec c4">List · priority</div></div>
+            <div class="band-row threshold"><div class="range r2">200 – 240</div><div>Promising</div><div class="rec c4">List</div></div>
+            <div class="band-row"><div class="range r3">241 – 300</div><div>Strongly promising</div><div class="rec c4">List</div></div>
+            <div class="band-row"><div class="range r3">301 – 360</div><div>Outstanding</div><div class="rec c4">List · priority</div></div>
           </div>
           <div class="callout-row"><span class="tag">Override</span> &nbsp; Regardless of the number, a <b>high-severity contradiction or critical missing evidence</b> routes the project to "Clarification Needed" for a human decision before any listing.</div>
         </div>
@@ -2771,7 +2771,7 @@ var VALUEX_SYSTEM_PROMPT = [
   "Every uploaded PDF has its actual pages attached earlier in this message as a labeled sequence of images, in page order — that is the primary source for that file; read it directly and visually, the same way a human reviewer would flip through a deck. The 'Uploaded file notes' section is only a supplementary, auto-extracted text companion and may be thin or empty for image-heavy decks — never treat thin extracted text as evidence the deck itself is thin when page images are attached. Only if a file's note explicitly says page rendering FAILED (a technical error, not a normal image-heavy deck) should you treat criteria resting mainly on that file as missing evidence (evidence tier no higher than C, with a 'missing' entry recommending a re-upload). A note saying a non-PDF file (XLSX/PPTX/DOCX) was not read is also missing evidence, not a thin-content signal — this workstation does not yet extract those formats.",
   "",
   "FORMULA (for your own reasoning only — do NOT return dimensions/total/band/recommendation, the client computes all of it deterministically from your 17 scores to remove arithmetic risk): per dimension, contribution = avg(its criterion scores) × weight × 60; total = sum of the 7 contributions, range 0-360.",
-  "BANDS (for your own reasoning only): 0-199 weak → REVISIT · 200-240 weakly-promising → LIST · 241-300 promising → LIST · 301-360 top → LIST.",
+  "BANDS (for your own reasoning only): 0-199 weak → REVISIT · 200-240 promising → LIST · 241-300 strongly-promising → LIST · 301-360 outstanding → LIST.",
   "",
   "EVIDENCE TIERS: V Verified (externally checkable — audit, named investor, on-chain data, filing) · S Supported (uploaded artifact backs the claim) · I Inferred (plausible from adjacent signals) · C Founder Claim (asserted only, no artifact).",
   "",
@@ -2837,18 +2837,18 @@ var EXPLAIN = {
     Market: 'MARKET & PURPOSE dimension (criteria 1, 2, 3 — market opportunity, problem fit, differentiation).\n\nTECHX weight: 0.21\nWEB3X weight: 0.20\n\nSales & Funding (0.22) now edges slightly ahead of Market — demonstrated commercial traction and validated funding are treated as marginally more decisive than market thesis alone.',
     Tech: 'TECHNOLOGY dimension (criterion 4 — technological innovation).\n\nTECHX weight: 0.20\nWEB3X weight: 0.20\n\nSame weight in both profiles. A single criterion that captures whether the core technology is genuinely differentiated.',
     Sales: 'SALES & FUNDING dimension (criteria 5, 6, 7 — customer acquisition, partnerships, revenue model).\n\nTECHX weight: 0.22\nWEB3X weight: 0.10\n\nRaised from 0.13 in TECHX to reflect how heavily investor decisions now weigh demonstrated revenue and commercial traction, not just market thesis.',
-    Econ: 'ECONOMICS dimension (criteria 8, 9, 10 — funding sufficiency, token utility, tokenomics depth).\n\nTECHX weight: 0.10 (criteria 9 & 10 skipped, so this dimension is funding sufficiency alone)\nWEB3X weight: 0.20 (all three criteria scored)\n\nNudged up from 0.07 to give verified, reputable funding a real say — but funding is scored on evidence quality, not amount: a large unconfirmed round scores no higher than a bare claim, while a smaller round from a named, verified institutional investor can reach 5-6. See the Confidence Uplift section for how strong, verified funding can also help a near-threshold project cross into Promising.',
+    Econ: 'ECONOMICS dimension (criteria 8, 9, 10 — funding sufficiency, token utility, tokenomics depth).\n\nTECHX weight: 0.10 (criteria 9 & 10 skipped, so this dimension is funding sufficiency alone)\nWEB3X weight: 0.20 (all three criteria scored)\n\nNudged up from 0.07 to give verified, reputable funding a real say — but funding is scored on evidence quality, not amount: a large unconfirmed round scores no higher than a bare claim, while a smaller round from a named, verified institutional investor can reach 5-6. See the Confidence Uplift section for how strong, verified funding can also help a near-threshold project cross into Strongly promising.',
     Skill: 'SKILL & EXECUTION dimension (criteria 11, 12, 13 — team, execution, documentation).\n\nTECHX weight: 0.17\nWEB3X weight: 0.15\n\nTrimmed from 0.20 to help fund the Sales & Funding increase, while still sitting close to WEB3X\'s weighting.',
     Engagement: 'ENGAGEMENT dimension (criteria 14, 15 — community management, community engagement).\n\nTECHX weight: 0.05\nWEB3X weight: 0.10\n\nDoubled in WEB3X because community can make or break a token project. For TECHX, it\'s a smaller signal.',
     Security: 'SECURITY & REGULATORY dimension (criteria 16, 17 — audits/technical foundation, regulatory safety).\n\nTECHX weight: 0.05\nWEB3X weight: 0.05\n\nSame in both profiles. A relatively low weight, but a verified regulatory license or licensing partnership here can also unlock the Confidence Uplift mechanism for a near-threshold project — see criterion 17\'s note.'
   },
   bands: {
     weak: 'WEAK band (0–199 points).\n\nBelow the 200 listing line. Routed to revisit — constructive feedback with a 6-month window; a scoping workshop is recommended.',
-    'weakly-promising': 'WEAKLY PROMISING band (200–240 points).\n\nClears the 200 listing line. Eligible to list; a scoping workshop can lift it into the Promising band.',
-    promising: 'PROMISING band (241–300 points).\n\nClear pass. Routed to the listing pipeline; the deal team can proceed with introductions and a listing draft.',
-    top: 'TOP band (301–360 points).\n\nBest-in-class. Listing + advisory candidate; priority for fundraising support and senior intros.'
+    promising: 'PROMISING band (200–240 points).\n\nClears the 200 listing line. Eligible to list; a scoping workshop can lift it into the Strongly promising band.',
+    'strongly-promising': 'STRONGLY PROMISING band (241–300 points).\n\nClear pass. Routed to the listing pipeline; the deal team can proceed with introductions and a listing draft.',
+    outstanding: 'OUTSTANDING band (301–360 points).\n\nBest-in-class. Listing + advisory candidate; priority for fundraising support and senior intros.'
   },
-  formula: 'VALUEX scoring formula:\n\n1. Each criterion scored 1–6\n2. For each of 7 dimensions: average score × dimension weight × 60 = contribution\n3. Total = sum of 7 contributions, capped at 360\n\nListing line = 200/360; 200 and above pass into Weakly promising / Promising / Top.\n\nThis matches the historical Excel rubric you used before this workstation.'
+  formula: 'VALUEX scoring formula:\n\n1. Each criterion scored 1–6\n2. For each of 7 dimensions: average score × dimension weight × 60 = contribution\n3. Total = sum of 7 contributions, capped at 360\n\nListing line = 200/360; 200 and above pass into Promising / Strongly promising / Outstanding.\n\nThis matches the historical Excel rubric you used before this workstation.'
 };
 
 function critNote(s) {
@@ -3889,16 +3889,16 @@ function enableTopBarButtons() {
 
 // ---- VALUEX BANDS (4-band system) ----
 function vxBand(total){
-  if (total >= 301) return 'top';
-  if (total >= 241) return 'promising';
-  if (total >= 200) return 'weakly-promising';
+  if (total >= 301) return 'outstanding';
+  if (total >= 241) return 'strongly-promising';
+  if (total >= 200) return 'promising';
   return 'weak';
 }
 function vxBandLabel(key){
-  return ({top:'Top', promising:'Promising', 'weakly-promising':'Weakly promising', weak:'Weak'})[key] || '\u2014';
+  return ({outstanding:'Outstanding', 'strongly-promising':'Strongly promising', promising:'Promising', weak:'Weak'})[key] || '\u2014';
 }
 function vxBandColor(key){
-  if (key === 'top') return 'var(--green)';
+  if (key === 'outstanding') return 'var(--green)';
   if (key === 'weak') return 'var(--red)';
   return 'var(--amber)';
 }
@@ -3912,7 +3912,7 @@ function recClassMap(rec) {
 }
 function recLabelMap(rec, band) {
   // Was hardcoded to 'List · top' for every LIST recommendation regardless of
-  // the project's actual band (weak/weakly-promising/promising/top) — fixed
+  // the project's actual band (weak/promising/strongly-promising/outstanding) — fixed
   // to build the label from the real computed band so it can never disagree
   // with the band shown elsewhere in the same report (gauge, pv-band, etc.).
   if (rec === 'LIST') return 'List · ' + (vxBandLabel(band) || '—').toLowerCase();
@@ -3921,7 +3921,7 @@ function recLabelMap(rec, band) {
   return 'Not a fit';
 }
 function bandClassMap(band) {
-  return band || 'weakly-promising';
+  return band || 'promising';
 }
 
 function renderEvaluation(d) {
@@ -3936,9 +3936,16 @@ function renderEvaluation(d) {
   chipsHTML += '<span class="chip">Run <b>' + new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) + '</b></span>';
   document.getElementById('er-chips').innerHTML = chipsHTML;
 
-  var bandCls = bandClassMap(d.band);
   var total = Number(d.total) || 0;
   var totalRound = Math.round(total * 10) / 10;
+  // Band is recomputed from the score every time, never trusted from storage.
+  // This matters for projects evaluated before the Sept 2026 band rename —
+  // their stored 'band' field may still say the old 'weakly-promising' /
+  // 'top' etc. Recomputing from the (unchanged) total score means those
+  // older library entries display correctly under the current band names
+  // without needing a re-evaluation.
+  d.band = vxBand(total);
+  var bandCls = bandClassMap(d.band);
   var scoreNumEl = document.getElementById('er-score');
   scoreNumEl.textContent = totalRound;
   scoreNumEl.className = 'score-num ' + bandCls;
@@ -4491,7 +4498,7 @@ function renderConfidenceUplift(d) {
     meta.textContent = '+' + u.points + ' pts applied · reviewer sign-off required';
     body.innerHTML =
       '<div class="ps-empty" style="font-style:normal;padding:0 0 12px;color:var(--text);">'
-      + 'This project fell in the uplift zone (226–240, just below the 241 Promising line) with verified strength on at least two of funding, partnerships, or regulatory status. '
+      + 'This project fell in the uplift zone (226–240, just below the 241 Strongly promising line) with verified strength on at least two of funding, partnerships, or regulatory status. '
       + '<b>+' + u.points + ' points</b> applied' + (isFinite(u.baseTotal) ? ' — base score before uplift was <b>' + u.baseTotal + '/360</b>.' : '.')
       + '</div>' + reasonsHtml
       + '<div style="margin-top:12px;padding:9px 12px;background:rgba(192,135,21,0.10);border:1px solid rgba(192,135,21,0.3);border-radius:6px;font-size:11.5px;color:#6b4a06;">⚠ Uplift is never final on its own — confirm the underlying evidence (license register entry, investor confirmation, signed partnership term) before this project is published to Selection.</div>';
@@ -6274,3 +6281,4 @@ document.getElementById('btn-decision').addEventListener('click', function(){
 
 </body>
 </html>
+  
