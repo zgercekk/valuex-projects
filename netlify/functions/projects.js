@@ -102,8 +102,25 @@ function stageLabel(stage) {
   return s.toLowerCase();
 }
 
+// Recomputes the band from the total score rather than trusting the stored
+// 'band' field. Necessary because projects evaluated before the Sept 2026
+// band rename have the OLD key baked into their stored record (e.g.
+// 'weakly-promising', 'top') — and worse, the old key 'promising' meant
+// 241-300, while the new key 'promising' means 200-240, so blindly reusing
+// a stored 'promising' string would silently mean the wrong thing for an
+// older record. The total score itself never changed meaning, so deriving
+// the band from it here keeps this in sync with vxBand() in
+// valuex-workstation.html without needing every old record re-evaluated.
+function vxBandFromTotal(total) {
+  const t = Number(total) || 0;
+  if (t >= 301) return 'outstanding';
+  if (t >= 241) return 'strongly-promising';
+  if (t >= 200) return 'promising';
+  return 'weak';
+}
+
 function bandLabel(band) {
-  // Band keys are now: weak / promising / strongly-promising / outstanding
+  // Band keys are: weak / promising / strongly-promising / outstanding
   // (see vxBand() in valuex-workstation.html). The generic hyphen-to-space
   // fallback already reads naturally for all four, so no special case
   // is needed here.
@@ -127,7 +144,7 @@ function buildPublicSummary(p) {
   const name = p.name || 'This project';
   const sector = shortSectorLabel(p.sector);
   const stage = stageLabel(p.stage);
-  const band = bandLabel(p.band);
+  const band = bandLabel(vxBandFromTotal(p.total));
   const { top, bottom } = topBottomDims(p.dimensions);
 
   const sentence1 = `${name} is a ${sector} project at the ${stage} stage.`;
