@@ -161,10 +161,34 @@ function buildPublicSummary(p) {
   return `${sentence1} VALUEX's evaluation places it in the ${band} band.`;
 }
 
+// Hand-edited public info from the workstation's "Selection profile" editor.
+// Stored on the record as p.publicProfile so an evaluation re-run (which
+// Object.assign's fresh evalData over the record) never overwrites it.
+// Only these keys are read; anything else in publicProfile is ignored.
+const PUBLIC_PROFILE_KEYS = ['website', 'founder', 'founderRole', 'founderLinkedin', 'contactEmail'];
+
+function cleanStr(v, max) {
+  return String(v == null ? '' : v).trim().slice(0, max || 500);
+}
+
 function toPublicShape(p) {
   const out = {};
   PUBLIC_FIELDS.forEach((k) => { if (p[k] !== undefined) out[k] = p[k]; });
-  out.summary = buildPublicSummary(p);
+
+  const pp = (p.publicProfile && typeof p.publicProfile === 'object') ? p.publicProfile : null;
+  if (pp) {
+    // A key that exists in publicProfile wins, even if empty -- clearing a
+    // field in the editor is how you hide it from the public page.
+    PUBLIC_PROFILE_KEYS.forEach((k) => {
+      if (Object.prototype.hasOwnProperty.call(pp, k)) out[k] = cleanStr(pp[k]);
+    });
+  }
+
+  // Custom "About" text replaces the auto-generated summary; an empty About
+  // falls back to buildPublicSummary() exactly as before.
+  const about = pp ? cleanStr(pp.about, 2000) : '';
+  out.summary = about || buildPublicSummary(p);
+  out.aboutCustom = !!about;
   return out;
 }
 

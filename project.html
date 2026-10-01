@@ -589,9 +589,24 @@ p{font-size:16px;}
     var chips=(String(project.sector||'').split(',').map(function(s){return s.trim();}).filter(Boolean).slice(0,4))
       .map(function(c){ return '<span class="chip">'+escapeHTML(c)+'</span>'; }).join('');
 
+    // Only http(s) links are rendered, so a stray "javascript:" value can never become a live link.
+    function safeUrl(u){
+      u=String(u||'').trim(); if(!u) return '';
+      if(!/^https?:\/\//i.test(u)) u='https://'+u.replace(/^\/+/,'');
+      return /^https?:\/\/[^\s"'<>]+$/i.test(u) ? u : '';
+    }
     var links=[];
-    if(project.website) links.push('<a href="'+escapeHTML(project.website)+'" target="_blank" rel="noopener">'+escapeHTML(name)+' website \u2197</a>');
-    if(project.founder) links.push('<span style="color:var(--slate);">'+escapeHTML(project.founder)+' \u00b7 Founder</span>');
+    var webUrl=safeUrl(project.website);
+    if(webUrl) links.push('<a href="'+escapeHTML(webUrl)+'" target="_blank" rel="noopener">'+escapeHTML(name)+' website \u2197</a>');
+    if(project.founder){
+      var fLi=safeUrl(project.founderLinkedin);
+      var fName=fLi ? '<a href="'+escapeHTML(fLi)+'" target="_blank" rel="noopener">'+escapeHTML(project.founder)+' \u2197</a>' : escapeHTML(project.founder);
+      links.push('<span style="color:var(--slate);">'+fName+' \u00b7 '+escapeHTML(project.founderRole||'Founder')+'</span>');
+    }
+    var mail=String(project.contactEmail||'').trim();
+    if(/^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(mail)) links.push('<a href="mailto:'+escapeHTML(mail)+'">'+escapeHTML(mail)+'</a>');
+    var logoOk=/^data:image\/(png|jpe?g|webp|svg\+xml);base64,[A-Za-z0-9+\/=]+$/i.test(String(project.logo||''));
+    var logoInner=logoOk ? '<img src="'+project.logo+'" alt="'+escapeHTML(name)+' logo">' : '<span class="co-mono">'+escapeHTML((name[0]||'?').toUpperCase())+'</span>';
 
     var evalHero='<section class="eval-hero"><canvas class="hero-viz" data-mode="radar" data-intensity="0.55" aria-hidden="true"></canvas><div class="hero-veil hv-soft" aria-hidden="true"></div>'
       + '<div class="wrap"><div class="crumb"><a href="selection.html">Selection</a> \u00b7 <a href="selection.html">Projects</a> \u00b7 <span>'+escapeHTML(name)+'</span></div>'
@@ -602,14 +617,14 @@ p{font-size:16px;}
       + '<div class="eh-card">'+buildGaugeSVG(score)+'<div style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;letter-spacing:.12em;color:rgba(255,255,255,.5);margin-top:4px;">VALUEX SCORE</div></div>'
       + '</div></div></section>';
 
-    var coSec='<section class="es co-sec"><div class="wrap"><div class="co-rail"><div class="co-logo"><span class="co-mono">'+escapeHTML((name[0]||'?').toUpperCase())+'</span></div>'
+    var coSec='<section class="es co-sec"><div class="wrap"><div class="co-rail"><div class="co-logo">'+logoInner+'</div>'
       + '<div class="co-meta"><div class="co-name">'+escapeHTML(name)+'</div><div class="co-links">'+links.join('\n')+'</div></div></div></div></section>';
 
     var swPills=tb.top.map(function(s){return '<span class="pill up">\u25b2 '+s+'</span>';}).join('')
       + tb.bottom.map(function(s){return '<span class="pill dn">\u25bc '+s+'</span>';}).join('');
     var scoredCount=(project.scores||[]).filter(function(s){return s.score!==null&&s.score!==undefined;}).length;
-    var summarySec='<section class="es"><div class="wrap"><div class="sum-band"><div><div class="es-k" style="margin-bottom:10px;">\u25c8 Project summary \u00b7 VALUEX Selection \u00b7 Ranking</div>'
-      + '<p>'+escapeHTML(project.summary||'')+'</p><div class="sw">'+swPills+'</div></div>'
+    var summarySec='<section class="es"><div class="wrap"><div class="sum-band"><div><div class="es-k" style="margin-bottom:10px;">\u25c8 '+(project.aboutCustom?'About '+escapeHTML(name):'Project summary')+' \u00b7 VALUEX Selection \u00b7 Ranking</div>'
+      + '<p style="white-space:pre-line;">'+escapeHTML(project.summary||'')+'</p><div class="sw">'+swPills+'</div></div>'
       + '<div class="sum-files">'+scoredCount+' / 17 criteria scored</div></div></div></section>';
 
     var methodSec='<section class="es"><div class="wrap"><div class="es-h"><span class="es-k">\u25f7 Method</span><h2>How this score was produced</h2></div>'

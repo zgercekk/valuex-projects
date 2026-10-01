@@ -1211,6 +1211,7 @@ a.comp-name:hover { color: var(--purple); text-decoration: underline; }
             <div class="profile-mono" id="pv-mono">··</div>
             <button type="button" id="pv-logo-btn" class="pv-logo-btn" title="Update the logo without re-running the evaluation">Change logo</button>
             <input type="file" id="pv-logo-input" accept="image/png,image/jpeg,image/webp,image/svg+xml" style="display:none;">
+            <button type="button" id="pv-public-btn" class="pv-logo-btn" title="Edit the logo, About text and contact info shown on the public Selection page">Edit Selection info</button>
             <button type="button" id="pv-preview-btn" class="pv-logo-btn" title="Enable a private preview link the founder can review before you publish to Selection">Copy preview link</button>
           </div>
           <div class="profile-title">
@@ -5491,6 +5492,8 @@ function saveProjectToLibrary(evalData) {
     ratingHistory = (list[existingIdx].ratingHistory || []).slice();
     ratingHistory.push({ at: nowIso, total: evalData.total });
     list[existingIdx] = Object.assign({}, list[existingIdx], evalData, {
+      // A re-run with no new logo uploaded must not wipe the saved one.
+      logo: evalData.logo || list[existingIdx].logo || null,
       lastRunAt: nowIso,
       status: list[existingIdx].status || 'pending',
       ratingHistory: ratingHistory,
@@ -5679,6 +5682,182 @@ function copyPreviewLink(id) {
     else toast('Open a project first', '!');
   });
 })();
+// =====================================================================
+// SELECTION PROFILE EDITOR
+// Edits what the PUBLIC project page shows (logo, About text, contact
+// info) without re-running the evaluation. Text fields are stored in
+// p.publicProfile, which saveProjectToLibrary() never overwrites, so a
+// re-run keeps these edits. projects.js applies them in toPublicShape().
+// =====================================================================
+
+// Mirror of buildPublicSummary() in netlify/functions/projects.js -- only
+// used to pre-fill the About box with what the public page shows today.
+function vxAutoPublicSummary(p) {
+  var DIM = { Market:'Market', Tech:'Technology', Sales:'Commercial Traction', Econ:'Economics', Skill:'Team & Execution', Engagement:'Community Engagement', Security:'Security' };
+  var parts = String(p.sector || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean)
+    .map(function(x){ var m = x.match(/\(([^)]+)\)/); return m ? m[1] : x; });
+  var sector = !parts.length ? 'technology' : parts.slice(0, 2).join(' / ');
+  var st = String(p.stage || '').trim();
+  var stage = !st ? 'early' : ((st.length <= 4 && st === st.toUpperCase()) ? st : st.toLowerCase());
+  var band = vxBandLabel(vxBand(p.total || 0)).toLowerCase();
+  var arr = (p.dimensions || []).filter(function(d){ return d && d.name && typeof d.weight === 'number'; })
+    .map(function(d){ return { name: d.name, avg: d.weight > 0 ? (d.contrib || 0) / (d.weight * 60) : 0 }; })
+    .sort(function(a, b){ return b.avg - a.avg; });
+  var s1 = (p.name || 'This project') + ' is a ' + sector + ' project at the ' + stage + ' stage.';
+  if (arr.length >= 4) {
+    var t = arr.slice(0, 2), b = arr.slice(-2);
+    return s1 + " VALUEX's evaluation places it in the " + band + ' band, with relative strengths in '
+      + (DIM[t[0].name] || t[0].name) + ' and ' + (DIM[t[1].name] || t[1].name) + ', and further validation needed around '
+      + (DIM[b[0].name] || b[0].name) + ' and ' + (DIM[b[1].name] || b[1].name) + '.';
+  }
+  return s1 + " VALUEX's evaluation places it in the " + band + ' band.';
+}
+
+(function(){
+  var st = document.createElement('style');
+  st.textContent = ''
+    + '.lib-card-actions{flex-wrap:wrap;}'
+    + '.lib-card-actions button{min-width:calc(33% - 6px);}'
+    + '.pp-card{max-width:620px;overflow-y:auto;}'
+    + '.pp-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px;}'
+    + '.pp-f{display:flex;flex-direction:column;gap:5px;}'
+    + '.pp-f.full{grid-column:1/-1;}'
+    + '.pp-f label{font-size:11px;color:var(--text-2);font-weight:600;display:flex;justify-content:space-between;align-items:baseline;gap:8px;}'
+    + '.pp-f label small{font-weight:400;color:var(--text-3);font-family:var(--mono);font-size:10px;}'
+    + '.pp-f input,.pp-f textarea{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:9px 12px;font-size:12px;color:var(--text);font-family:inherit;}'
+    + '.pp-f textarea{min-height:120px;resize:vertical;line-height:1.55;}'
+    + '.pp-f input:focus,.pp-f textarea:focus{outline:0;border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-soft);}'
+    + '.pp-logo{display:flex;align-items:center;gap:14px;padding:10px 12px;border:1px dashed var(--line-2);border-radius:8px;background:var(--panel-2);}'
+    + '.pp-logo-box{width:64px;height:64px;border-radius:10px;border:1px solid var(--line);background:#fff center/contain no-repeat;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--purple);flex:0 0 auto;}'
+    + '.pp-logo .pp-lbtns{display:flex;gap:6px;flex-wrap:wrap;}'
+    + '.pp-link{background:none;border:0;padding:0;color:var(--purple);font-family:var(--mono);font-size:10px;cursor:pointer;text-decoration:underline;}'
+    + '.pp-hint{font-size:10.5px;color:var(--text-3);line-height:1.45;}'
+    + '@media(max-width:600px){.pp-grid{grid-template-columns:1fr;}}';
+  document.head.appendChild(st);
+})();
+
+function openPublicProfileEditor(id) {
+  var p = getProjects().find(function(x){ return x.id === id; });
+  if (!p) { toast('Project not found', '!'); return; }
+  var pp = p.publicProfile || {};
+  function cur(k, fallback) { return Object.prototype.hasOwnProperty.call(pp, k) ? (pp[k] || '') : (fallback || ''); }
+  var pendingLogo = p.logo || null;
+  var autoAbout = vxAutoPublicSummary(p);
+
+  var m = document.getElementById('pp-modal');
+  if (!m) {
+    m = document.createElement('div');
+    m.id = 'pp-modal';
+    m.className = 'modal-overlay';
+    document.body.appendChild(m);
+    m.addEventListener('click', function(e){ if (e.target === m) m.classList.remove('open'); });
+  }
+  var isLive = p.publishedToSelection || p.publishedToBelowThreshold;
+  m.innerHTML = '<div class="modal-card pp-card">'
+    + '<div class="modal-head"><h3>Selection profile</h3><button class="modal-x" data-pp="close">×</button></div>'
+    + '<p class="modal-sub"><b>' + escapeHTML(p.name || '—') + '</b> · what investors see on the public project page. '
+    +   'Saving does <b>not</b> re-run the evaluation, and re-runs won\u2019t overwrite these edits. '
+    +   (isLive ? 'This project is live \u2014 changes show within ~30 seconds.' : 'Not published yet \u2014 changes apply once you publish.') + '</p>'
+    + '<div class="pp-grid">'
+    +   '<div class="pp-f full"><label>Logo</label><div class="pp-logo">'
+    +     '<div class="pp-logo-box" id="pp-logo-box"></div>'
+    +     '<div style="display:flex;flex-direction:column;gap:6px;"><div class="pp-lbtns">'
+    +       '<button type="button" class="pv-logo-btn" data-pp="logo">Change logo</button>'
+    +       '<button type="button" class="pv-logo-btn" data-pp="logo-rm">Remove</button>'
+    +     '</div><span class="pp-hint">PNG / JPG / WEBP / SVG · transparent PNG looks best</span></div>'
+    +     '<input type="file" id="pp-logo-input" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden>'
+    +   '</div></div>'
+    +   '<div class="pp-f full"><label>About <small id="pp-about-count"></small></label>'
+    +     '<textarea id="pp-about" maxlength="2000" placeholder="' + escapeAttr(autoAbout) + '"></textarea>'
+    +     '<span class="pp-hint">Leave empty to use the auto-generated summary. '
+    +     '<button type="button" class="pp-link" data-pp="auto">Start from the auto summary</button></span></div>'
+    +   '<div class="pp-f full"><label>Website</label><input id="pp-website" placeholder="https://"></div>'
+    +   '<div class="pp-f"><label>Founder / contact name</label><input id="pp-founder" placeholder="e.g. Jane Doe"></div>'
+    +   '<div class="pp-f"><label>Role</label><input id="pp-role" placeholder="Founder"></div>'
+    +   '<div class="pp-f"><label>LinkedIn</label><input id="pp-linkedin" placeholder="https://www.linkedin.com/in/…"></div>'
+    +   '<div class="pp-f"><label>Contact email <small>optional · public</small></label><input id="pp-email" type="email" placeholder="hello@company.com"></div>'
+    + '</div>'
+    + '<div class="modal-actions">'
+    +   (isLive ? '<a class="btn ghost" href="' + escapeHTML(selectionLiveUrl(p)) + '" target="_blank" rel="noopener" style="margin-right:auto;text-decoration:none;">Open public page ↗</a>' : '')
+    +   '<button class="btn ghost" data-pp="close">Cancel</button>'
+    +   '<button class="btn primary" data-pp="save">Save</button>'
+    + '</div></div>';
+
+  var $ = function(i){ return document.getElementById(i); };
+  $('pp-about').value = cur('about', '');
+  $('pp-website').value = cur('website', p.website);
+  $('pp-founder').value = cur('founder', p.founder);
+  $('pp-role').value = cur('founderRole', 'Founder');
+  $('pp-linkedin').value = cur('founderLinkedin', p.founderLinkedin);
+  $('pp-email').value = cur('contactEmail', '');
+
+  function paintLogo() {
+    var box = $('pp-logo-box');
+    if (pendingLogo) { box.style.backgroundImage = 'url("' + pendingLogo + '")'; box.textContent = ''; }
+    else { box.style.backgroundImage = ''; box.textContent = getMonoFromName(p.name); }
+  }
+  function count() { $('pp-about-count').textContent = $('pp-about').value.length + ' / 2000'; }
+  paintLogo(); count();
+  $('pp-about').addEventListener('input', count);
+  $('pp-logo-input').addEventListener('change', function(){
+    var f = this.files && this.files[0];
+    if (f) vxProcessImage(f, function(dataUrl){ pendingLogo = dataUrl; paintLogo(); });
+    this.value = '';
+  });
+
+  m.querySelectorAll('[data-pp]').forEach(function(el){
+    el.addEventListener('click', function(){
+      var a = el.getAttribute('data-pp');
+      if (a === 'close') m.classList.remove('open');
+      else if (a === 'logo') $('pp-logo-input').click();
+      else if (a === 'logo-rm') { pendingLogo = null; paintLogo(); }
+      else if (a === 'auto') { $('pp-about').value = autoAbout; count(); $('pp-about').focus(); }
+      else if (a === 'save') savePublicProfile();
+    });
+  });
+
+  function savePublicProfile() {
+    var web = $('pp-website').value.trim();
+    var li = $('pp-linkedin').value.trim();
+    var mail = $('pp-email').value.trim();
+    if (mail && !/^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(mail)) { toast('That email doesn\u2019t look right', '!'); $('pp-email').focus(); return; }
+    if (web && !/^https?:\/\//i.test(web)) web = 'https://' + web;
+    if (li && !/^https?:\/\//i.test(li)) li = 'https://' + li;
+    var about = $('pp-about').value.trim();
+    if (about === autoAbout) about = ''; // unchanged auto text -> keep it auto, so it tracks future re-runs
+
+    var list = getProjects();
+    var idx = list.findIndex(function(x){ return x.id === id; });
+    if (idx < 0) { toast('Project not found', '!'); return; }
+    list[idx].publicProfile = {
+      about: about,
+      website: web,
+      founder: $('pp-founder').value.trim(),
+      founderRole: $('pp-role').value.trim() || 'Founder',
+      founderLinkedin: li,
+      contactEmail: mail,
+      updatedAt: new Date().toISOString()
+    };
+    list[idx].logo = pendingLogo;
+    setProjects(list);
+    m.classList.remove('open');
+    toast('Selection profile saved \u2014 no re-evaluation needed', '\u2713');
+    if (typeof renderLibrary === 'function') renderLibrary();
+    renderSidebarRecent();
+    if (document.getElementById('view-profile').classList.contains('active') && currentProjectId === id) renderProfile(list[idx]);
+  }
+
+  m.classList.add('open');
+}
+(function initPublicProfileBtn(){
+  var btn = document.getElementById('pv-public-btn');
+  if (!btn) return;
+  btn.addEventListener('click', function(){
+    if (currentProjectId) openPublicProfileEditor(currentProjectId);
+    else toast('Open a project first', '!');
+  });
+})();
+
 function statusLabel(s) { return ({approved:'Approved', pending:'Pending', revisit:'Revisit', declined:'Declined'})[s] || s; }
 function getMonoFromName(n) {
   if (!n) return '··';
@@ -5828,6 +6007,7 @@ function renderLibrary() {
       + '<div class="lib-card-actions">'
       +   '<button data-action="profile">View profile</button>'
       +   '<button data-action="rerank">Re-rank</button>'
+      +   '<button data-action="editPublic" title="Edit logo, About and contact info on the public page">Selection profile</button>'
       +   '<button data-action="publish" class="'+(p.publishedToSelection?'is-published':'')+'">'+(p.publishedToSelection?'Hide from Selection':'Show on Selection')+'</button>'
       +   (belowOk
             ? '<button data-action="publishBelow" class="'+(p.publishedToBelowThreshold?'is-published-below':'')+'">'+(p.publishedToBelowThreshold?'Hide from Below-Threshold':'Show on Below-Threshold')+'</button>'
@@ -5841,6 +6021,7 @@ function renderLibrary() {
       else if (act === 'profile') openProfile(p.id);
       else if (act === 'rerank') { currentProjectId = p.id; switchView('input'); toast('Update materials, then run evaluation to re-rank', 'i'); }
       else if (act === 'decide') openDecisionModal(p.id);
+      else if (act === 'editPublic') openPublicProfileEditor(p.id);
       else if (act === 'publish') toggleSelectionVisibility(p.id);
       else if (act === 'publishBelow') toggleBelowThresholdVisibility(p.id);
     });
