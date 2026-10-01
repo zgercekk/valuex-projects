@@ -32,10 +32,12 @@
 //      `netlify deploy`) — a bare drag-and-drop of static files skips
 //      `npm install` and this function (and projects.js) won't run.
 
+import { requireUser, unauthorized } from './_auth.js';
+
 const cors = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
@@ -56,7 +58,7 @@ const DEFAULT_MODEL = 'claude-sonnet-5';
 // at or below what the client sends, or it would silently undo that fix.
 const MIN_MAX_TOKENS = 2000;
 
-export default async (req) => {
+export default async (req, context) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: cors });
   }
@@ -64,6 +66,12 @@ export default async (req) => {
   if (req.method !== 'POST') {
     return new Response('Method not allowed', { status: 405, headers: cors });
   }
+
+  // This calls the paid Anthropic API on the caller's behalf, so it's
+  // never open to unauthenticated callers -- unlike projects.js, nothing
+  // here is meant to be reachable by the public pages.
+  const user = await requireUser(req, context);
+  if (!user) return unauthorized(cors);
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
