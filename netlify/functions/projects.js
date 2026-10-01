@@ -32,6 +32,7 @@
 // drag-and-drop of static files, since that skips `npm install`.
 
 import { getStore } from '@netlify/blobs';
+import { requireUser, unauthorized } from './_auth.js';
 
 const STORE_NAME = 'valuex-projects';
 const KEY = 'list';
@@ -39,7 +40,7 @@ const KEY = 'list';
 const cors = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
 // Fields exposed to the public pages (Selection and Below-Threshold alike).
@@ -160,14 +161,38 @@ function buildPublicSummary(p) {
   return `${sentence1} VALUEX's evaluation places it in the ${band} band.`;
 }
 
+// Hand-edited public info from the workstation's "Selection profile" editor.
+// Stored on the record as p.publicProfile so an evaluation re-run (which
+// Object.assign's fresh evalData over the record) never overwrites it.
+// Only these keys are read; anything else in publicProfile is ignored.
+const PUBLIC_PROFILE_KEYS = ['website', 'founder', 'founderRole', 'founderLinkedin', 'contactEmail'];
+
+function cleanStr(v, max) {
+  return String(v == null ? '' : v).trim().slice(0, max || 500);
+}
+
 function toPublicShape(p) {
   const out = {};
   PUBLIC_FIELDS.forEach((k) => { if (p[k] !== undefined) out[k] = p[k]; });
-  out.summary = buildPublicSummary(p);
+
+  const pp = (p.publicProfile && typeof p.publicProfile === 'object') ? p.publicProfile : null;
+  if (pp) {
+    // A key that exists in publicProfile wins, even if empty -- clearing a
+    // field in the editor is how you hide it from the public page.
+    PUBLIC_PROFILE_KEYS.forEach((k) => {
+      if (Object.prototype.hasOwnProperty.call(pp, k)) out[k] = cleanStr(pp[k]);
+    });
+  }
+
+  // Custom "About" text replaces the auto-generated summary; an empty About
+  // falls back to buildPublicSummary() exactly as before.
+  const about = pp ? cleanStr(pp.about, 2000) : '';
+  out.summary = about || buildPublicSummary(p);
+  out.aboutCustom = !!about;
   return out;
 }
 
-export default async (req) => {
+export default async (req, context) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: cors });
   }
@@ -179,6 +204,17 @@ export default async (req) => {
   const lookupSlug = (url.searchParams.get('slug') || '').trim().toLowerCase();
   const lookupId = (url.searchParams.get('id') || '').trim();
   const wantsPreview = url.searchParams.get('preview') === '1';
+
+  // Only the internal-use paths require a signed-in user: the full,
+  // unfiltered list (GET with none of the public query flags) and any
+  // write. The public/belowThreshold/slug|id lookup paths stay open on
+  // purpose -- they're read by unauthenticated pages (selection.html,
+  // below-threshold.html, project.html).
+  const isInternalRead = req.method === 'GET' && !isPublic && !isBelowThreshold && !lookupSlug && !lookupId;
+  if (isInternalRead || req.method === 'POST') {
+    const user = await requireUser(req, context);
+    if (!user) return unauthorized(cors);
+  }
 
   if (req.method === 'GET') {
     let list = [];
