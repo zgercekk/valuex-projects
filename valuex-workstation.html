@@ -84,6 +84,22 @@ input, textarea, select { font-family: inherit; }
 .side-foot .avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--purple); color: #fff; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; font-weight: 700; }
 .side-foot .who b { font-size: 12px; display: block; color: var(--text); }
 .side-foot .who small { font-size: 10px; color: var(--text-3); font-family: var(--mono); }
+.side-foot .sf-logout { margin-left: auto; width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--text-3); font-size: 13px; flex-shrink: 0; }
+.side-foot .sf-logout:hover { background: var(--panel-2); color: var(--text); }
+
+body:not(.authed) .app { display: none; }
+.auth-gate { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; background: var(--bg); }
+body.authed .auth-gate { display: none; }
+/* Netlify Identity's widget iframe ships with a hardcoded z-index: 99,
+   which sits underneath .auth-gate (9999) and renders invisibly. */
+#netlify-identity-widget { z-index: 10000 !important; }
+.auth-gate-card { width: 320px; text-align: center; padding: 40px 36px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow-lg); }
+.auth-gate-card img.wm { height: 18px; width: auto; display: block; margin: 0 auto 22px; }
+.auth-gate-card h1 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+.auth-gate-card p { font-size: 12px; color: var(--text-2); line-height: 1.5; margin-bottom: 22px; }
+.auth-gate-btn { width: 100%; padding: 10px; background: var(--purple); color: #fff; font-weight: 700; font-size: 12px; border-radius: 7px; box-shadow: var(--shadow-sm); }
+.auth-gate-btn:hover { background: var(--purple-2); }
+.auth-gate-status { margin-top: 14px !important; font-family: var(--mono); font-size: 10.5px; color: var(--text-3) !important; min-height: 14px; }
 
 .main { grid-area: main; overflow-y: auto; }
 .view { display: none; }
@@ -959,6 +975,18 @@ a.comp-name:hover { color: var(--purple); text-decoration: underline; }
 </head>
 <body>
 
+<script src="https://identity.netlify.com/v1/netlify-identity-widget.js" defer></script>
+
+<div class="auth-gate" id="auth-gate">
+  <div class="auth-gate-card">
+    <img class="wm" id="auth-gate-wm" alt="VALUEX">
+    <h1>VALUEX Workstation</h1>
+    <p>Sign in with your VALUEX account to access the evaluation workstation.</p>
+    <button class="auth-gate-btn" id="auth-gate-login">Log in</button>
+    <p class="auth-gate-status" id="auth-gate-status"></p>
+  </div>
+</div>
+
 <div class="app">
 
   <aside class="sidebar">
@@ -983,8 +1011,9 @@ a.comp-name:hover { color: var(--purple); text-decoration: underline; }
       </div>
     </div>
     <div class="side-foot">
-      <div class="avatar">VX</div>
-      <div class="who"><b>VALUEX Reviewer</b><small>internal</small></div>
+      <div class="avatar" id="sf-avatar">VX</div>
+      <div class="who"><b id="sf-name">VALUEX Reviewer</b><small id="sf-email">internal</small></div>
+      <button class="sf-logout" id="sf-logout" title="Log out">⏻</button>
     </div>
   </aside>
 
@@ -1182,6 +1211,7 @@ a.comp-name:hover { color: var(--purple); text-decoration: underline; }
             <div class="profile-mono" id="pv-mono">··</div>
             <button type="button" id="pv-logo-btn" class="pv-logo-btn" title="Update the logo without re-running the evaluation">Change logo</button>
             <input type="file" id="pv-logo-input" accept="image/png,image/jpeg,image/webp,image/svg+xml" style="display:none;">
+            <button type="button" id="pv-public-btn" class="pv-logo-btn" title="Edit the logo, About text and contact info shown on the public Selection page">Edit Selection info</button>
             <button type="button" id="pv-preview-btn" class="pv-logo-btn" title="Enable a private preview link the founder can review before you publish to Selection">Copy preview link</button>
           </div>
           <div class="profile-title">
@@ -1823,6 +1853,85 @@ const WORDMARK = "iVBORw0KGgoAAAANSUhEUgAAAZAAAAAvCAYAAADNVJzYAAAxZklEQVR4nO2de5
 const XICON = "iVBORw0KGgoAAAANSUhEUgAAAHgAAAB4CAYAAAA5ZDbSAAARFklEQVR4nO2de3Bc1X3HP7+7K8sPZEkYuyQhIyWURzOdElr6YEoswMckIYVpSBqaabuxrbUgpCWkbjsEvLakLcaZxkxmWvO0LFhokpmmU8CkNHCArJmhTJNQzKRJE0JAoR0eNbb8tqTd++sfd6+0ki157927D5H7mdmxLWvvPff87jm/c873/H4HYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiKkKivJi1VkrX1Eq/k8shXV04PT0UjTEVf6+ZsdZKPk+ip4diwK8KoDPrwWLFYNRaK/O6jiw20heuEUTzDFZsxia3bbMt1V4pkgr136wdGXumI3zZhQ+iFMWZ8Ysu4Ez/twqCsge4I501o/P5LS2rhw7gLxEuEC31Zv5zuzP+Tqm7ExIorwJbumHv68LlqrQWhTF3jB+/c5i9K5ZzabrfPB6kjpJRPtxInjsVPilwDEj4DzCNGT8TRVW4GmXlA1vsx3M5xqy1zDcjW2sll0Me2GIXFsZ4GKUHZQy/EZU/98w68P4oAouAs0zWXDO02b5cnKBNWlmUWMQlZyxgr7q0BS3XzDYWGIv3Nu35DosULlRlH8ohFQ5U+DkoLm8I9BTG2JbLGTefJ1FtuepNPk8ilzPuxDHuUJceXN5Q4WCl9YBySGEfcKG11mkRCk4SpzDOXoq82iIccISfAWAqL1fVBjYYTaWss+HvzFHgSRFOR3BREpV+VGgF3laX64Zutb3ZrClkMjay3qXWZDI2mc2awr0bbVqgT+BtFVqD1AGCK8LpwL8ZY9z3tvHmgRH+65xl/CKdNc+vHTT/oS4/Aq/OKy1bZD4Y4IfP0dE2wTMK5yAcQQO0RFFFRURIiMOqdf3mBzZlHZMzJ+vomwa/jPdm7EUJeEqh4D9LxRcRiihLRPipKpd193DghJF0yLFJZKPWVMo6uZxxd2Tsh0V4GhfUUTfMgwI/P3yUlb/+cUaBpvXH/ov9+nN0FCd4FvhAmBdbXHFwwC1y2frbzB6/LqMoY9VdtE8uZ9xMxibTWfOiwE0qtItKsHmgVzGHRfi1tiVsN8ZoM/vjfJ6EMUbdCe5COB84HMi4gKgUvbrii+tvM3syGZuMyrgQoYEBfN+5btDkHIftwAqgEPAySVXeAT47tMluaFZ/7PvdoU32rxCuxStz0HIW8Opo+7qsedC/ZpTljHxhwVor5JDXulgAPCnw28ABDfzwqiKyWJVPpLPmGWutY0xz+GO/LPdutKsSDrtU9SgEcEWAeMZtV/gesLp7hHFSJ65iVUukLRg8f5kD0llzvAhrEfYBraCBCi4irroUgJ133mLfZ4xxfZ/XSEqDHffujD0r6XCfuhREJOCLp4rQirAvUWRNOmuO56jNWKNmFea/5fdtslcL+i1BRjWof4KCqnaKyFOvwVU9PbgYNMg0IUosVrBIPo/TDY8BlwGjQXsnEYqKdjiOfGpdv9lVy94p8hbsY4w36Fo/aB5FZSuwnID+WCGJyH6Ej3UL/cYYN59p3KArnyFhjHG7HQYRPqohjItXB8sdZMu6frMrk7HJWrqeGnd5VqxFcjlY2cWjInoFKvsDV4pQFLRDVa5NZ82/1GIwcir8Vja0yV4D+k11ZRQJ3iMh2qkqT+we4epUCoxBqWGPVLMW7GEU0NKwP60qryMsEgkoo6k6qBwF7r53sz0nmzWFVMrWuOxTpFIld3OrPQ/lLlSOIhro/iIUERaBjADpUp3U1LhQcwN7AwdrrZPOmjdVWKtKAg1WOaUR6phAe0J54IEv2EUwtdBQS/x7bPtru9hJcL9COzAWdNSMqqNKwoXedNa8WeoRaj6WqEsrKPPHux3hFkSWSQh/rHAA5eLx0+snSvgiQsdCtqH8HiGmfF7XLMsc4Zb1g2Z3rf3ujHvXD9937sjYh0T4Yw2xOCBQUDgDSKezZriW/rhcRHCEewT2hhlUibBM4OvrBk2q3uOHuhrY7+5e+T5tySPsDiVKoAqeKFEosuq622ojSkQtIhQW03P2RRyC+q6t133hwF9IvytjP7zAFyVE3UA+rUyUAD7S3cMBiK7iohYRVLk8nTUvNkIdq9tI1McXJT6fNS+KwxdVaBfCixICd0YtSvgiQnGcu6E6EcGFm9JZ82ImY5ONkD7rbmAoEyX6zYPAdqQKUUKiFSXKRQRx+AyEFBGEMxzYvn7Q5Boxb/dp2NpuuSghwndQfpcGixJlixmXA49VJSII30NZvXuE8VSuccurDWnBMF2UcAqsQ9iHhBclRBja2W/fE1aUKBcRUIZKQkdApkSEorI2nTXHIdgWm6hpBnXGMca4OzP2Klf1n8WpTpToGuET+S6cnhFcchVuwE8h+S7vZe/2Wu7lIsGXVH0RQZFPrx80jzaya54sUyNv7jM5P95k+wU2o7ypsCDgZQoirEC4vXfA3BKmHEOb7e0oN6vyNsHn5+MIZ6qSTWfNpmYwbqlczcCUKHFpN4+4ypUivHWykauiidn8oghFVZaifE0S3NN2nHf2Ax2nnbwljx5GOjvhnYMsb0lwncCNCAdn70FUTzri9+77K8Dj9RIRKqVJDDw9OkKEf0W5UE/YIg4IR4Djs09bVEVYisp+hFE9xTMKKEqHp/JwcNZBlSeQLCzNv2dew0H4T1WuLK0zN010RtMYGKaMfM9WuzRxhD9ReL9AURRRQYEOEVahnK3KgVnlOi9sJqluZd2sOBTUpTDn9YR2hFdUeQoY9cskgqjyv8A3mjH0pqkMDKfe/zs8aDvdCe5S+COBt+f21ZWOyGefCgmMK6wQ4VtOkuvXbjL7w5a9ETSdgWEq/HLmz3sAkzWFO2+yC1rbeBThoyhvUqvpnuACZyr6xPhBueqGr5lxm7HJ/El+tVnDX5vSwHPhr+eWWvI3EIxqbZ5DBFVXnzpWkM/+xVazbz5EWsxk3hkYyrtCKzs2coUDH4i61h0HXJdX05fyBOZdEHw936jnFtpm2K4blnlbcB9rrZPP18YH94zgzrcuOeaXjHnZglMp6/iJW+pxv3yexMgIbpRBYTGzUM/tss1077DMqxY8GfS12f6G47Je4FeB2jyFTvvrzxJwz9qs+WEzBcFVwrwxsM3YpMmawn2b7NWO8qDCaQITNX8Cz9AtCocd+NN1WbPLL0uN7xwJTWNgf4fHyf5vzwUkNmwwE/fcan8/meDbpR8fAxK1npgKgFJUWCygCFf2Dprntm2zLRfsmWUMUIMw0LA0hYErWSHa2W9/yy3yMEo7zlxqUo0oqUkCo4Uin7zuNvODuX69WVa9Gm5gf4VoeNB2Fic4z0mQYAIo5XgTlyWucqlCrxfbU4FxheJkArIKKSVkO+V18STDYwpDSeG76nAEwC+zW6QI/HezKEsNNXDZJrdelE0KZ5S6RCmVThESqrSIcED1VPunVVXFEfQ0RKYZqzyBpn8Bnf7VIiKH/I31c91DRBxV2kWYQCn65S1JmpQiIPrTWTPc6EFZwwxctj31GpR/Ag6rMHZCYJqIK4oimtC5ogq8zfCLRfQ4KhaHn6tb2TxZHBK4fFBhNdCKcHSu1ixehEPRa/XTyysiLkorcJrj8Km1A+bhX7pts350w30D9jynwG6EFoVCaL/qdcmLEX5RKPJnp/KPszGcsRep8KCrvF+Eo0E3/80ozwKEY0VhZd+AeTnK1EjBilJn/JyOq86ntXCcp4EL1OVw0GDqKbwuE9CEcNmaAfPSbJrtXPha89Bm+5u4PA0UNWgs0rRiURRhqTh8P7GX1U8dYizVgNF13dMTlcIxCz0Ze4fC7wB7kfDlEKSoSqc4fG7NgHlpW8q2mKyZCHqdLLAtZVt6B8wLOzL2S8AOUQkTTegXLKFwAJeLC8v4am67+UJXl00SPIKjKuq69DbpdzfbtHo5HfdSxUsmwjjCCpR/6B0wD2UyNrkhF9y4PhtyZqKUzG1YhLsJl+ernCSwV5Xrd2Ts2kbk/KqfphpFOGYZXlA17SjPj72HK859ngIRhIj4LuT8NlpXnM6TAhepcjC0CxFVURGEBMLlvQPmhXrOkevSgq21QgodHrSdDtzvZc+hGNq/oaqwUJV3cFh7ww1mPEc0ISK+j7xluznmTrAW2C/CgqAhNVNFFVFv33QLyv3DG2wnKbRemwjqYuDJcMxC+HDMckTEFVgoSl/vgHnV2mhHqH6Ia99W87I6fB7RxQROdlZGKdxV4UPu4vrm4Ky5gaeFYxI6HLOcArBchS29f2u+Xat8F76/TA+Yh1XlKxIiz9cMktQg3PVU1LSbKJP3ViU0XE7Hcvw8UyCPd63kDwGp7SqRF1JDDka62aXoagmT52sa9c3BWbMWXB6OmVB2oIQe3YIfuccSVRkpLqDPeGntazyn9PJ8mZxxxSEtyP9omDxfZYiIq16g3FA9cnDWyMDe+Uk2Y5MtsAPlvcDxsK1XRFWVhAi4sK5vo3nLpqjLQr6f52tdv3lDlV6BpAbO8zWFKglRjqG8rzXBDmutAwg1OlKoJgbOlHI6jlSX03EKlaIIp7vKl/uy5tl657vw83yls+YZUW4VkWVU4Y9LOb9GET428l0GvevXZtAV+VtTllvq047wTYR9VWq3BeAMER7qHTSfa+TCvX/v+zL2647wmTB5vqZRhxyckRq47NyG8wXyQKuihdADK2/RfgnCTwpjXHr26vrnmSpn8vCRx+loW0JelbOD5/kqR1WQJMKx4jgr+7ZGL0pE1kWX53QUYVihXZXx8KNmVfEWRMYSwprrvmIO5nL18buzYYxRcshN28x+hDUlPTiBhFwE8YTHcZTOZCvDD2yJPgdnZAY+WU7H8ArRpIjQjnDjmgHzUtSHVYTFlBZBegfMC6p8CegIfPhIOSVRQl0uLhznq1Hn4IzEwOUiAtAHwXNczKCAl29jUkRohnwXPpOLIPNAlKi6K6iFiKDQIfDvY4e44tx9FJppl6LPpK7dRutESZQgVJ6vEqKqrjiOgxNlDs6qDDwzp6MI3crc213mRhWkBTgsDpf0DphXG7UTohL8st17sz0nsYDdKIuqHVSWkpe+cugIPVEcDFZVFz1TRFCtZkRZexEhaqaJElISJbR6UQL4UFtEokRoA0/NCZ/8myhFBBxuq6WIEDUniBJO9aJElDk4Q3Ulk9tdN9pV4rDLrYmI0Bx5piqjeUWJwC24XERQYacb6mCoKcoOq3itOEFfyd/MI+NCrUWJanJwBjJw6Xx6yZREBIEzRTgWenspAN5hFUWlt+9285ZN1eewiqg5QZRQElGIEurqWVpkZ1hRIlgBPAXH7YJsJCICFECWCdzcCBEhaspFCYWNUYgS/sFgI7s9UcKmgrnVin/Zn5NNHgyFjL5bRISoKdvF8o/AtVGLEkHmxwHeBit33kRL61KeV+U8EY6E7pqVIsISR/jJRBOICFHj+8rX8rQj7EY5G+VI+J2Zk2dU/Li7g4vNBgqVjlEq6qI932uUZbQCHaKMqaJ4A6RAn9Je5gUijDlNIiJEjS9KpLNmVEqihDgkS88euM7w1gXHgM4fjdIKRm2FvrgiAxuMplLWuSFjDqE8gkOnQLtosA/eZ7kICwWuXzNgXmr2xYywlIsSuPy5oqehLCdgnYnSLt5pa53i8MiNWXM4lbJOpVuEK/fB3tGq/PQxWlqXcqMql4icJN3vbHjFcRT+T4Th3kHzXLMESdeSsrX6jyQdUuqyHHCDOEdVHBGeHTvI35/7B0xgDKbm+9GqZD5njwtKI581xI2tZDJe3qhUKtRbJOS8LizEd+ctNmUdUkCIlpfLIV1dOO+WWUZMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTFPy/5b9TXw+9TU0AAAAAElFTkSuQmCC";
 document.getElementById('brand-wm').src = "data:image/png;base64," + WORDMARK;
 document.getElementById('empty-x').src = "data:image/png;base64," + XICON;
+document.getElementById('auth-gate-wm').src = "data:image/png;base64," + WORDMARK;
+
+// =====================================================================
+// NETLIFY IDENTITY · login gate
+// =====================================================================
+// The whole app below sits behind this gate. The gate itself is purely a
+// client-side UX layer — the real access control is on the server, in the
+// Netlify Functions this page calls (projects.js, evaluate.js,
+// evaluate-start.js, evaluate-status.js), which all reject requests
+// without a valid Identity token regardless of what this page does.
+function showAuthedUI(user) {
+  document.body.classList.add('authed');
+  var name = (user && user.user_metadata && user.user_metadata.full_name) || (user && user.email) || 'VALUEX Reviewer';
+  var email = (user && user.email) || '';
+  var nameEl = document.getElementById('sf-name');
+  var emailEl = document.getElementById('sf-email');
+  var avatarEl = document.getElementById('sf-avatar');
+  if (nameEl) nameEl.textContent = name;
+  if (emailEl) emailEl.textContent = email;
+  if (avatarEl) avatarEl.textContent = name.slice(0, 2).toUpperCase();
+  // Only now — once Identity has confirmed a real signed-in user — do we
+  // touch project data at all. See the comment where these used to fire
+  // unconditionally at the bottom of this script.
+  if (!__dataLoadStarted) {
+    __dataLoadStarted = true;
+    renderSidebarRecent();
+    loadProjectsFromCloud();
+    setInterval(loadProjectsFromCloud, 30000);
+  }
+}
+var __dataLoadStarted = false;
+function showAuthGate() {
+  document.body.classList.remove('authed');
+}
+// Wrapped in DOMContentLoaded because the widget script above is now
+// loaded with `defer` (see that tag for why) rather than as a plain
+// blocking <script>. A deferred script only becomes available once parsing
+// finishes and DOMContentLoaded is about to fire — this inline script,
+// left unmarked, would otherwise still run immediately at its position in
+// the document and find window.netlifyIdentity undefined every time,
+// permanently breaking login. Deferred scripts always finish before
+// DOMContentLoaded fires, so this is guaranteed to run after it's ready.
+document.addEventListener('DOMContentLoaded', function () {
+  var widget = window.netlifyIdentity;
+  var statusEl = document.getElementById('auth-gate-status');
+  if (!widget) {
+    if (statusEl) statusEl.textContent = 'Netlify Identity failed to load — check your connection and reload.';
+    return;
+  }
+  widget.on('init', function (user) { user ? showAuthedUI(user) : showAuthGate(); });
+  widget.on('login', function () { widget.close(); window.location.reload(); });
+  widget.on('logout', function () {
+    // Clear the local project cache on sign-out — it holds full internal
+    // data (evidence, contradictions, reviewer notes), and this may be a
+    // shared machine. The server remains the source of truth regardless;
+    // this only prevents a stale local copy from sitting in this browser's
+    // storage after the user has signed out of it.
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    window.location.reload();
+  });
+  widget.on('error', function (err) { console.error('Netlify Identity error:', err); });
+  document.getElementById('auth-gate-login').addEventListener('click', function () { widget.open('login'); });
+  document.getElementById('sf-logout').addEventListener('click', function () { widget.logout(); });
+  widget.init();
+});
+
+// Returns a headers object carrying the current Identity user's JWT, or {}
+// if signed out. user.jwt() (not the cached user.token.access_token)
+// transparently refreshes an expired token before returning it.
+async function authHeaders() {
+  var user = window.netlifyIdentity && window.netlifyIdentity.currentUser();
+  if (!user) return {};
+  try {
+    var token = await user.jwt();
+    return { Authorization: 'Bearer ' + token };
+  } catch (e) {
+    return {};
+  }
+}
 
 function toast(msg, ic) {
   var t = document.getElementById('toast');
@@ -3100,7 +3209,7 @@ async function scanPublicSignals() {
   try {
     var resp = await fetch(EVAL_ENDPOINT, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: Object.assign({ 'Content-Type': 'application/json' }, await authHeaders()),
       body: JSON.stringify({
         model: 'claude-sonnet-5',
         max_tokens: 1200,
@@ -3403,7 +3512,7 @@ async function runVALUEXEvaluation() {
     // flow did. ----
     var startResp = await fetch(EVAL_START_ENDPOINT, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: Object.assign({ 'Content-Type': 'application/json' }, await authHeaders()),
       body: requestBodyStr
     });
     if (!startResp.ok) {
@@ -3437,7 +3546,7 @@ async function runVALUEXEvaluation() {
 
       var statusResp;
       try {
-        statusResp = await fetch(EVAL_STATUS_ENDPOINT + '?jobId=' + encodeURIComponent(jobId), { method: 'GET' });
+        statusResp = await fetch(EVAL_STATUS_ENDPOINT + '?jobId=' + encodeURIComponent(jobId), { method: 'GET', headers: await authHeaders() });
       } catch (pollNetErr) {
         // Transient network hiccup while polling — keep trying rather than
         // aborting the whole evaluation over one dropped poll.
@@ -5313,10 +5422,10 @@ function setProjects(list) {
 // has already been updated synchronously above, so the UI never blocks on this).
 function queueCloudSync(list) {
   clearTimeout(__syncTimer);
-  __syncTimer = setTimeout(function () {
+  __syncTimer = setTimeout(async function () {
     fetch(PROJECTS_API, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: Object.assign({ 'Content-Type': 'application/json' }, await authHeaders()),
       body: JSON.stringify(list)
     }).then(function (r) {
       __cloudSyncOK = !!(r && r.ok);
@@ -5335,8 +5444,21 @@ function queueCloudSync(list) {
 // is still empty but this browser already has projects saved locally (e.g.
 // the very first run after this update goes live), those are pushed up so
 // nothing gets lost and every browser converges on the same library.
+//
+// __syncInFlight guards against overlapping calls: this runs on a 30s
+// setInterval (see the Identity login handler), which does not wait for the
+// previous call to resolve before firing the next one. If a single call
+// were ever slow (a sluggish network, a slow cold-start on the function),
+// calls would stack up against the same origin indefinitely. That's exactly
+// what happened when requireUser() in _auth.js had no timeout on its own
+// upstream call — see the fix there. This guard is the client-side half of
+// the same fix, so the same class of pile-up can't recur even if some other
+// future call happens to be slow for an unrelated reason.
+var __syncInFlight = false;
 function loadProjectsFromCloud() {
-  return fetch(PROJECTS_API)
+  if (__syncInFlight) return Promise.resolve();
+  __syncInFlight = true;
+  return authHeaders().then(function (headers) { return fetch(PROJECTS_API, { headers: headers }); })
     .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(function (remoteList) {
       __cloudSyncOK = true;
@@ -5356,7 +5478,8 @@ function loadProjectsFromCloud() {
       __cloudSyncOK = false;
       setCloudSyncBadge('offline');
       console.warn('Could not reach the shared project store; showing this browser\u2019s local copy only.', e);
-    });
+    })
+    .finally(function () { __syncInFlight = false; });
 }
 function makeProjectId() { return 'PRJ-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6).toUpperCase(); }
 
@@ -5369,6 +5492,8 @@ function saveProjectToLibrary(evalData) {
     ratingHistory = (list[existingIdx].ratingHistory || []).slice();
     ratingHistory.push({ at: nowIso, total: evalData.total });
     list[existingIdx] = Object.assign({}, list[existingIdx], evalData, {
+      // A re-run with no new logo uploaded must not wipe the saved one.
+      logo: evalData.logo || list[existingIdx].logo || null,
       lastRunAt: nowIso,
       status: list[existingIdx].status || 'pending',
       ratingHistory: ratingHistory,
@@ -5557,6 +5682,182 @@ function copyPreviewLink(id) {
     else toast('Open a project first', '!');
   });
 })();
+// =====================================================================
+// SELECTION PROFILE EDITOR
+// Edits what the PUBLIC project page shows (logo, About text, contact
+// info) without re-running the evaluation. Text fields are stored in
+// p.publicProfile, which saveProjectToLibrary() never overwrites, so a
+// re-run keeps these edits. projects.js applies them in toPublicShape().
+// =====================================================================
+
+// Mirror of buildPublicSummary() in netlify/functions/projects.js -- only
+// used to pre-fill the About box with what the public page shows today.
+function vxAutoPublicSummary(p) {
+  var DIM = { Market:'Market', Tech:'Technology', Sales:'Commercial Traction', Econ:'Economics', Skill:'Team & Execution', Engagement:'Community Engagement', Security:'Security' };
+  var parts = String(p.sector || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean)
+    .map(function(x){ var m = x.match(/\(([^)]+)\)/); return m ? m[1] : x; });
+  var sector = !parts.length ? 'technology' : parts.slice(0, 2).join(' / ');
+  var st = String(p.stage || '').trim();
+  var stage = !st ? 'early' : ((st.length <= 4 && st === st.toUpperCase()) ? st : st.toLowerCase());
+  var band = vxBandLabel(vxBand(p.total || 0)).toLowerCase();
+  var arr = (p.dimensions || []).filter(function(d){ return d && d.name && typeof d.weight === 'number'; })
+    .map(function(d){ return { name: d.name, avg: d.weight > 0 ? (d.contrib || 0) / (d.weight * 60) : 0 }; })
+    .sort(function(a, b){ return b.avg - a.avg; });
+  var s1 = (p.name || 'This project') + ' is a ' + sector + ' project at the ' + stage + ' stage.';
+  if (arr.length >= 4) {
+    var t = arr.slice(0, 2), b = arr.slice(-2);
+    return s1 + " VALUEX's evaluation places it in the " + band + ' band, with relative strengths in '
+      + (DIM[t[0].name] || t[0].name) + ' and ' + (DIM[t[1].name] || t[1].name) + ', and further validation needed around '
+      + (DIM[b[0].name] || b[0].name) + ' and ' + (DIM[b[1].name] || b[1].name) + '.';
+  }
+  return s1 + " VALUEX's evaluation places it in the " + band + ' band.';
+}
+
+(function(){
+  var st = document.createElement('style');
+  st.textContent = ''
+    + '.lib-card-actions{flex-wrap:wrap;}'
+    + '.lib-card-actions button{min-width:calc(33% - 6px);}'
+    + '.pp-card{max-width:620px;overflow-y:auto;}'
+    + '.pp-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px;}'
+    + '.pp-f{display:flex;flex-direction:column;gap:5px;}'
+    + '.pp-f.full{grid-column:1/-1;}'
+    + '.pp-f label{font-size:11px;color:var(--text-2);font-weight:600;display:flex;justify-content:space-between;align-items:baseline;gap:8px;}'
+    + '.pp-f label small{font-weight:400;color:var(--text-3);font-family:var(--mono);font-size:10px;}'
+    + '.pp-f input,.pp-f textarea{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:9px 12px;font-size:12px;color:var(--text);font-family:inherit;}'
+    + '.pp-f textarea{min-height:120px;resize:vertical;line-height:1.55;}'
+    + '.pp-f input:focus,.pp-f textarea:focus{outline:0;border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-soft);}'
+    + '.pp-logo{display:flex;align-items:center;gap:14px;padding:10px 12px;border:1px dashed var(--line-2);border-radius:8px;background:var(--panel-2);}'
+    + '.pp-logo-box{width:64px;height:64px;border-radius:10px;border:1px solid var(--line);background:#fff center/contain no-repeat;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--purple);flex:0 0 auto;}'
+    + '.pp-logo .pp-lbtns{display:flex;gap:6px;flex-wrap:wrap;}'
+    + '.pp-link{background:none;border:0;padding:0;color:var(--purple);font-family:var(--mono);font-size:10px;cursor:pointer;text-decoration:underline;}'
+    + '.pp-hint{font-size:10.5px;color:var(--text-3);line-height:1.45;}'
+    + '@media(max-width:600px){.pp-grid{grid-template-columns:1fr;}}';
+  document.head.appendChild(st);
+})();
+
+function openPublicProfileEditor(id) {
+  var p = getProjects().find(function(x){ return x.id === id; });
+  if (!p) { toast('Project not found', '!'); return; }
+  var pp = p.publicProfile || {};
+  function cur(k, fallback) { return Object.prototype.hasOwnProperty.call(pp, k) ? (pp[k] || '') : (fallback || ''); }
+  var pendingLogo = p.logo || null;
+  var autoAbout = vxAutoPublicSummary(p);
+
+  var m = document.getElementById('pp-modal');
+  if (!m) {
+    m = document.createElement('div');
+    m.id = 'pp-modal';
+    m.className = 'modal-overlay';
+    document.body.appendChild(m);
+    m.addEventListener('click', function(e){ if (e.target === m) m.classList.remove('open'); });
+  }
+  var isLive = p.publishedToSelection || p.publishedToBelowThreshold;
+  m.innerHTML = '<div class="modal-card pp-card">'
+    + '<div class="modal-head"><h3>Selection profile</h3><button class="modal-x" data-pp="close">×</button></div>'
+    + '<p class="modal-sub"><b>' + escapeHTML(p.name || '—') + '</b> · what investors see on the public project page. '
+    +   'Saving does <b>not</b> re-run the evaluation, and re-runs won\u2019t overwrite these edits. '
+    +   (isLive ? 'This project is live \u2014 changes show within ~30 seconds.' : 'Not published yet \u2014 changes apply once you publish.') + '</p>'
+    + '<div class="pp-grid">'
+    +   '<div class="pp-f full"><label>Logo</label><div class="pp-logo">'
+    +     '<div class="pp-logo-box" id="pp-logo-box"></div>'
+    +     '<div style="display:flex;flex-direction:column;gap:6px;"><div class="pp-lbtns">'
+    +       '<button type="button" class="pv-logo-btn" data-pp="logo">Change logo</button>'
+    +       '<button type="button" class="pv-logo-btn" data-pp="logo-rm">Remove</button>'
+    +     '</div><span class="pp-hint">PNG / JPG / WEBP / SVG · transparent PNG looks best</span></div>'
+    +     '<input type="file" id="pp-logo-input" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden>'
+    +   '</div></div>'
+    +   '<div class="pp-f full"><label>About <small id="pp-about-count"></small></label>'
+    +     '<textarea id="pp-about" maxlength="2000" placeholder="' + escapeAttr(autoAbout) + '"></textarea>'
+    +     '<span class="pp-hint">Leave empty to use the auto-generated summary. '
+    +     '<button type="button" class="pp-link" data-pp="auto">Start from the auto summary</button></span></div>'
+    +   '<div class="pp-f full"><label>Website</label><input id="pp-website" placeholder="https://"></div>'
+    +   '<div class="pp-f"><label>Founder / contact name</label><input id="pp-founder" placeholder="e.g. Jane Doe"></div>'
+    +   '<div class="pp-f"><label>Role</label><input id="pp-role" placeholder="Founder"></div>'
+    +   '<div class="pp-f"><label>LinkedIn</label><input id="pp-linkedin" placeholder="https://www.linkedin.com/in/…"></div>'
+    +   '<div class="pp-f"><label>Contact email <small>optional · public</small></label><input id="pp-email" type="email" placeholder="hello@company.com"></div>'
+    + '</div>'
+    + '<div class="modal-actions">'
+    +   (isLive ? '<a class="btn ghost" href="' + escapeHTML(selectionLiveUrl(p)) + '" target="_blank" rel="noopener" style="margin-right:auto;text-decoration:none;">Open public page ↗</a>' : '')
+    +   '<button class="btn ghost" data-pp="close">Cancel</button>'
+    +   '<button class="btn primary" data-pp="save">Save</button>'
+    + '</div></div>';
+
+  var $ = function(i){ return document.getElementById(i); };
+  $('pp-about').value = cur('about', '');
+  $('pp-website').value = cur('website', p.website);
+  $('pp-founder').value = cur('founder', p.founder);
+  $('pp-role').value = cur('founderRole', 'Founder');
+  $('pp-linkedin').value = cur('founderLinkedin', p.founderLinkedin);
+  $('pp-email').value = cur('contactEmail', '');
+
+  function paintLogo() {
+    var box = $('pp-logo-box');
+    if (pendingLogo) { box.style.backgroundImage = 'url("' + pendingLogo + '")'; box.textContent = ''; }
+    else { box.style.backgroundImage = ''; box.textContent = getMonoFromName(p.name); }
+  }
+  function count() { $('pp-about-count').textContent = $('pp-about').value.length + ' / 2000'; }
+  paintLogo(); count();
+  $('pp-about').addEventListener('input', count);
+  $('pp-logo-input').addEventListener('change', function(){
+    var f = this.files && this.files[0];
+    if (f) vxProcessImage(f, function(dataUrl){ pendingLogo = dataUrl; paintLogo(); });
+    this.value = '';
+  });
+
+  m.querySelectorAll('[data-pp]').forEach(function(el){
+    el.addEventListener('click', function(){
+      var a = el.getAttribute('data-pp');
+      if (a === 'close') m.classList.remove('open');
+      else if (a === 'logo') $('pp-logo-input').click();
+      else if (a === 'logo-rm') { pendingLogo = null; paintLogo(); }
+      else if (a === 'auto') { $('pp-about').value = autoAbout; count(); $('pp-about').focus(); }
+      else if (a === 'save') savePublicProfile();
+    });
+  });
+
+  function savePublicProfile() {
+    var web = $('pp-website').value.trim();
+    var li = $('pp-linkedin').value.trim();
+    var mail = $('pp-email').value.trim();
+    if (mail && !/^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(mail)) { toast('That email doesn\u2019t look right', '!'); $('pp-email').focus(); return; }
+    if (web && !/^https?:\/\//i.test(web)) web = 'https://' + web;
+    if (li && !/^https?:\/\//i.test(li)) li = 'https://' + li;
+    var about = $('pp-about').value.trim();
+    if (about === autoAbout) about = ''; // unchanged auto text -> keep it auto, so it tracks future re-runs
+
+    var list = getProjects();
+    var idx = list.findIndex(function(x){ return x.id === id; });
+    if (idx < 0) { toast('Project not found', '!'); return; }
+    list[idx].publicProfile = {
+      about: about,
+      website: web,
+      founder: $('pp-founder').value.trim(),
+      founderRole: $('pp-role').value.trim() || 'Founder',
+      founderLinkedin: li,
+      contactEmail: mail,
+      updatedAt: new Date().toISOString()
+    };
+    list[idx].logo = pendingLogo;
+    setProjects(list);
+    m.classList.remove('open');
+    toast('Selection profile saved \u2014 no re-evaluation needed', '\u2713');
+    if (typeof renderLibrary === 'function') renderLibrary();
+    renderSidebarRecent();
+    if (document.getElementById('view-profile').classList.contains('active') && currentProjectId === id) renderProfile(list[idx]);
+  }
+
+  m.classList.add('open');
+}
+(function initPublicProfileBtn(){
+  var btn = document.getElementById('pv-public-btn');
+  if (!btn) return;
+  btn.addEventListener('click', function(){
+    if (currentProjectId) openPublicProfileEditor(currentProjectId);
+    else toast('Open a project first', '!');
+  });
+})();
+
 function statusLabel(s) { return ({approved:'Approved', pending:'Pending', revisit:'Revisit', declined:'Declined'})[s] || s; }
 function getMonoFromName(n) {
   if (!n) return '··';
@@ -5706,6 +6007,7 @@ function renderLibrary() {
       + '<div class="lib-card-actions">'
       +   '<button data-action="profile">View profile</button>'
       +   '<button data-action="rerank">Re-rank</button>'
+      +   '<button data-action="editPublic" title="Edit logo, About and contact info on the public page">Selection profile</button>'
       +   '<button data-action="publish" class="'+(p.publishedToSelection?'is-published':'')+'">'+(p.publishedToSelection?'Hide from Selection':'Show on Selection')+'</button>'
       +   (belowOk
             ? '<button data-action="publishBelow" class="'+(p.publishedToBelowThreshold?'is-published-below':'')+'">'+(p.publishedToBelowThreshold?'Hide from Below-Threshold':'Show on Below-Threshold')+'</button>'
@@ -5719,6 +6021,7 @@ function renderLibrary() {
       else if (act === 'profile') openProfile(p.id);
       else if (act === 'rerank') { currentProjectId = p.id; switchView('input'); toast('Update materials, then run evaluation to re-rank', 'i'); }
       else if (act === 'decide') openDecisionModal(p.id);
+      else if (act === 'editPublic') openPublicProfileEditor(p.id);
       else if (act === 'publish') toggleSelectionVisibility(p.id);
       else if (act === 'publishBelow') toggleBelowThresholdVisibility(p.id);
     });
@@ -6170,14 +6473,14 @@ document.getElementById('btn-decision').addEventListener('click', function(){
   else toast('No active project', '!');
 });
 
-// Initial library render on page load
-renderSidebarRecent();
-// Pull the shared library from the server, then keep it fresh in the background
-// so a project evaluated in one browser shows up for everyone else too.
-loadProjectsFromCloud();
-setInterval(loadProjectsFromCloud, 30000);
+// Initial library render + cloud sync now start only once Identity confirms
+// a signed-in user (see showAuthedUI below) — not unconditionally on page
+// load. Firing these before auth resolves meant getProjects() would read
+// straight from localStorage (a full local cache of internal project data:
+// evidence, contradictions, reviewer notes) and render it into the DOM
+// underneath the auth-gate overlay, which is purely visual — inspectable
+// via devtools by anyone on a shared machine, logged in or not.
 </script>
 
 </body>
 </html>
-  
