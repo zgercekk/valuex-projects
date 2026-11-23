@@ -247,8 +247,8 @@ img{max-width:100%;display:block;}
   function fmtScore(x){ return Math.abs(x-Math.round(x))<1e-9 ? String(Math.round(x)) : (Math.round(x*10)/10).toFixed(1); }
   // Live formatting: whole numbers plain ("4", "48"), everything else 2 decimals ("4.67", "4.50", "58.80").
   function fmt2(x){ var r=Math.round(x*100)/100; return Math.abs(r-Math.round(r))<1e-9 ? String(Math.round(r)) : r.toFixed(2); }
-  // Same thresholds as the live page and vxBand() in the workstation: 200 / 241 / 301.
-  function bandFor(s){ return s<200?'WEAK':(s<241?'PROMISING':(s<301?'STRONGLY PROMISING':'OUTSTANDING')); }
+  // Same thresholds as vxBand() in the workstation: 200 / 240 / 300.
+  function bandFor(s){ return s<200?'WEAK':(s<240?'PROMISING':(s<300?'STRONGLY PROMISING':'OUTSTANDING')); }
   function initials(n){
     var parts=String(n||'').trim().split(/\s+/).filter(Boolean);
     if(!parts.length) return 'VX';
