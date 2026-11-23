@@ -1501,7 +1501,7 @@ a.comp-name:hover { color: var(--purple); text-decoration: underline; }
 
           <!-- Confidence Uplift — only rendered with content when eligible/applied -->
           <div class="card-ev" id="card-uplift" style="display:none;">
-            <div class="card-head"><h3>▲ Confidence Uplift <span class="help-ico" data-tip="An evidence-gated mechanism for projects that land just below the 241 Strongly promising line (226-240) with genuinely verified strength on funding, partnerships, or regulatory status — never a blanket score boost. Only fires with V/S-tier evidence on at least 2 of those three criteria, capped at +15 points, and always flagged for reviewer sign-off before publishing.">?</span></h3><span class="meta" id="er-uplift-meta"></span></div>
+            <div class="card-head"><h3>▲ Confidence Uplift <span class="help-ico" data-tip="An evidence-gated mechanism for projects that land just below the 240 Strongly promising line (225-239) with genuinely verified strength on funding, partnerships, or regulatory status — never a blanket score boost. Only fires with V/S-tier evidence on at least 2 of those three criteria, capped at +15 points, and always flagged for reviewer sign-off before publishing.">?</span></h3><span class="meta" id="er-uplift-meta"></span></div>
             <div class="card-body" id="er-uplift-body"></div>
           </div>
 
@@ -1600,9 +1600,9 @@ red_flags      ← detect_red_flags(all_inputs)
 <span class="sec">// ROUTE DECISION</span>
 <span class="kw">if</span> critical_contradiction <span class="kw">or</span> critical_missing:
   recommendation ← <span class="str">"CLARIFICATION_NEEDED"</span>           <span class="cmt">// override regardless of score</span>
-<span class="kw">elif</span> total ≥ <span class="num">241</span>:
+<span class="kw">elif</span> total ≥ <span class="num">240</span>:
   recommendation ← <span class="str">"LIST"</span>                          <span class="cmt">// strongly promising / outstanding</span>
-<span class="kw">elif</span> total ∈ [<span class="num">200</span>, <span class="num">240</span>]:
+<span class="kw">elif</span> total ∈ [<span class="num">200</span>, <span class="num">239</span>]:
   recommendation ← <span class="str">"HUMAN_REVIEW"</span>                  <span class="cmt">// borderline — reviewer signs off</span>
 <span class="kw">elif</span> total ∈ [<span class="num">121</span>, <span class="num">199</span>]:
   recommendation ← <span class="str">"REVISIT_LATER"</span>                 <span class="cmt">// 6-month timer + workshop offer</span>
@@ -1718,7 +1718,7 @@ red_flags      ← detect_red_flags(all_inputs)
             <div class="we-row"><div>Security (16·17)</div><div class="num">4.00</div><div class="num">0.05</div><div class="num">×60</div><div class="num">12.0</div></div>
             <div class="we-row total"><div>Total VALUEX score</div><div class="num"></div><div class="num"></div><div class="num"></div><div class="num">240.0 / 360</div></div>
           </div>
-          <div class="callout-row"><span class="tag">Reading it</span> &nbsp; 240 lands at the top of the <b>Promising</b> band (200–240) — above the 200 listing line. Technology and Skill carried it; Engagement and Sales dragged. The total can never exceed 360 by construction.</div>
+          <div class="callout-row"><span class="tag">Reading it</span> &nbsp; 240 lands at the bottom of the <b>Strongly promising</b> band (240–299) — above the 200 listing line. Technology and Skill carried it; Engagement and Sales dragged. The total can never exceed 360 by construction.</div>
         </div>
 
         <div class="method-block" id="m8">
@@ -1726,9 +1726,9 @@ red_flags      ← detect_red_flags(all_inputs)
           <p class="sub">The total maps to a band, and the band drives the recommendation. Projects scoring below 200 fall short of the listing line and are routed to revisit; 200 and above pass into the Promising, Strongly promising or Outstanding bands and are listed.</p>
           <div class="bands-strip">
             <div class="band-row"><div class="range r1">0 – 199</div><div>Weak</div><div class="rec c2">Revisit later</div></div>
-            <div class="band-row threshold"><div class="range r2">200 – 240</div><div>Promising</div><div class="rec c4">List</div></div>
-            <div class="band-row"><div class="range r3">241 – 300</div><div>Strongly promising</div><div class="rec c4">List</div></div>
-            <div class="band-row"><div class="range r3">301 – 360</div><div>Outstanding</div><div class="rec c4">List · priority</div></div>
+            <div class="band-row threshold"><div class="range r2">200 – 239</div><div>Promising</div><div class="rec c4">List</div></div>
+            <div class="band-row"><div class="range r3">240 – 299</div><div>Strongly promising</div><div class="rec c4">List</div></div>
+            <div class="band-row"><div class="range r3">300 – 360</div><div>Outstanding</div><div class="rec c4">List · priority</div></div>
           </div>
           <div class="callout-row"><span class="tag">Override</span> &nbsp; Regardless of the number, a <b>high-severity contradiction or critical missing evidence</b> routes the project to "Clarification Needed" for a human decision before any listing.</div>
         </div>
@@ -1902,8 +1902,16 @@ document.addEventListener('DOMContentLoaded', function () {
     if (statusEl) statusEl.textContent = 'Netlify Identity failed to load — check your connection and reload.';
     return;
   }
+  // The widget also fires 'login' during its own init when it restores a saved
+  // session. Reloading on that would loop forever, so only reload after a
+  // login the user started from the gate's "Log in" button.
+  var loginRequested = false;
   widget.on('init', function (user) { user ? showAuthedUI(user) : showAuthGate(); });
-  widget.on('login', function () { widget.close(); window.location.reload(); });
+  widget.on('login', function (user) {
+    widget.close();
+    if (loginRequested) { loginRequested = false; window.location.reload(); }
+    else if (user) { showAuthedUI(user); }
+  });
   widget.on('logout', function () {
     // Clear the local project cache on sign-out — it holds full internal
     // data (evidence, contradictions, reviewer notes), and this may be a
@@ -1914,7 +1922,7 @@ document.addEventListener('DOMContentLoaded', function () {
     window.location.reload();
   });
   widget.on('error', function (err) { console.error('Netlify Identity error:', err); });
-  document.getElementById('auth-gate-login').addEventListener('click', function () { widget.open('login'); });
+  document.getElementById('auth-gate-login').addEventListener('click', function () { loginRequested = true; widget.open('login'); });
   document.getElementById('sf-logout').addEventListener('click', function () { widget.logout(); });
   widget.init();
 });
@@ -2780,7 +2788,7 @@ var VALUEX_SYSTEM_PROMPT = [
   "Every uploaded PDF has its actual pages attached earlier in this message as a labeled sequence of images, in page order — that is the primary source for that file; read it directly and visually, the same way a human reviewer would flip through a deck. The 'Uploaded file notes' section is only a supplementary, auto-extracted text companion and may be thin or empty for image-heavy decks — never treat thin extracted text as evidence the deck itself is thin when page images are attached. Only if a file's note explicitly says page rendering FAILED (a technical error, not a normal image-heavy deck) should you treat criteria resting mainly on that file as missing evidence (evidence tier no higher than C, with a 'missing' entry recommending a re-upload). A note saying a non-PDF file (XLSX/PPTX/DOCX) was not read is also missing evidence, not a thin-content signal — this workstation does not yet extract those formats.",
   "",
   "FORMULA (for your own reasoning only — do NOT return dimensions/total/band/recommendation, the client computes all of it deterministically from your 17 scores to remove arithmetic risk): per dimension, contribution = avg(its criterion scores) × weight × 60; total = sum of the 7 contributions, range 0-360.",
-  "BANDS (for your own reasoning only): 0-199 weak → REVISIT · 200-240 promising → LIST · 241-300 strongly-promising → LIST · 301-360 outstanding → LIST.",
+  "BANDS (for your own reasoning only): 0-199 weak → REVISIT · 200-239 promising → LIST · 240-299 strongly-promising → LIST · 300-360 outstanding → LIST.",
   "",
   "EVIDENCE TIERS: V Verified (externally checkable — audit, named investor, on-chain data, filing) · S Supported (uploaded artifact backs the claim) · I Inferred (plausible from adjacent signals) · C Founder Claim (asserted only, no artifact).",
   "",
@@ -2853,9 +2861,9 @@ var EXPLAIN = {
   },
   bands: {
     weak: 'WEAK band (0–199 points).\n\nBelow the 200 listing line. Routed to revisit — constructive feedback with a 6-month window; a scoping workshop is recommended.',
-    promising: 'PROMISING band (200–240 points).\n\nClears the 200 listing line. Eligible to list; a scoping workshop can lift it into the Strongly promising band.',
-    'strongly-promising': 'STRONGLY PROMISING band (241–300 points).\n\nClear pass. Routed to the listing pipeline; the deal team can proceed with introductions and a listing draft.',
-    outstanding: 'OUTSTANDING band (301–360 points).\n\nBest-in-class. Listing + advisory candidate; priority for fundraising support and senior intros.'
+    promising: 'PROMISING band (200–239 points).\n\nClears the 200 listing line. Eligible to list; a scoping workshop can lift it into the Strongly promising band.',
+    'strongly-promising': 'STRONGLY PROMISING band (240–299 points).\n\nClear pass. Routed to the listing pipeline; the deal team can proceed with introductions and a listing draft.',
+    outstanding: 'OUTSTANDING band (300–360 points).\n\nBest-in-class. Listing + advisory candidate; priority for fundraising support and senior intros.'
   },
   formula: 'VALUEX scoring formula:\n\n1. Each criterion scored 1–6\n2. For each of 7 dimensions: average score × dimension weight × 60 = contribution\n3. Total = sum of 7 contributions, capped at 360\n\nListing line = 200/360; 200 and above pass into Promising / Strongly promising / Outstanding.\n\nThis matches the historical Excel rubric you used before this workstation.'
 };
@@ -3014,7 +3022,7 @@ function vxRecommendationFromBand(band) {
 // be trusted when a deterministic recomputation is this cheap.
 function computeUpliftFromScores(scores, dimensions, contradictions, baseTotal) {
   var out = { eligible: false, applied: false, baseTotal: Math.round(baseTotal * 10) / 10, points: 0, reasons: [], requiresReview: false };
-  if (baseTotal < 226 || baseTotal > 240) return out; // not in the uplift zone at all
+  if (baseTotal < 225 || baseTotal > 239) return out; // not in the uplift zone at all
 
   var hasHighContra = (contradictions || []).some(function(c){ return c && c.sev === 'H'; });
   if (hasHighContra) return out;
@@ -3898,8 +3906,8 @@ function enableTopBarButtons() {
 
 // ---- VALUEX BANDS (4-band system) ----
 function vxBand(total){
-  if (total >= 301) return 'outstanding';
-  if (total >= 241) return 'strongly-promising';
+  if (total >= 300) return 'outstanding';
+  if (total >= 240) return 'strongly-promising';
   if (total >= 200) return 'promising';
   return 'weak';
 }
@@ -3993,7 +4001,7 @@ function renderEvaluation(d) {
   // highlight active band label
   var labels = document.querySelectorAll('#er-band-labels span');
   labels.forEach(function(l){ l.classList.remove('on'); });
-  var labIdx = total < 181 ? 0 : total < 241 ? 1 : total < 301 ? 2 : 3;
+  var labIdx = total < 181 ? 0 : total < 240 ? 1 : total < 300 ? 2 : 3;
   if (labels[labIdx]) labels[labIdx].classList.add('on');
 
   // summary
@@ -4507,7 +4515,7 @@ function renderConfidenceUplift(d) {
     meta.textContent = '+' + u.points + ' pts applied · reviewer sign-off required';
     body.innerHTML =
       '<div class="ps-empty" style="font-style:normal;padding:0 0 12px;color:var(--text);">'
-      + 'This project fell in the uplift zone (226–240, just below the 241 Strongly promising line) with verified strength on at least two of funding, partnerships, or regulatory status. '
+      + 'This project fell in the uplift zone (225–239, just below the 240 Strongly promising line) with verified strength on at least two of funding, partnerships, or regulatory status. '
       + '<b>+' + u.points + ' points</b> applied' + (isFinite(u.baseTotal) ? ' — base score before uplift was <b>' + u.baseTotal + '/360</b>.' : '.')
       + '</div>' + reasonsHtml
       + '<div style="margin-top:12px;padding:9px 12px;background:rgba(192,135,21,0.10);border:1px solid rgba(192,135,21,0.3);border-radius:6px;font-size:11.5px;color:#6b4a06;">⚠ Uplift is never final on its own — confirm the underlying evidence (license register entry, investor confirmation, signed partnership term) before this project is published to Selection.</div>';
@@ -4523,7 +4531,7 @@ function renderConfidenceUplift(d) {
   } else {
     // Zone-adjacent but not eligible — still worth a one-line note, no strip.
     meta.textContent = 'not eligible';
-    body.innerHTML = '<div class="ps-empty">Not currently eligible for Confidence Uplift — either outside the 226–240 zone, or fewer than 2 of funding/partnerships/regulatory are backed by V/S-tier evidence.</div>';
+    body.innerHTML = '<div class="ps-empty">Not currently eligible for Confidence Uplift — either outside the 225–239 zone, or fewer than 2 of funding/partnerships/regulatory are backed by V/S-tier evidence.</div>';
     if (strip) strip.style.display = 'none';
   }
 }
@@ -4563,7 +4571,7 @@ function renderThresholdProximity(d) {
   var pctFromThreshold = (total - 200);
   var statusCls = total >= 200 ? 'over' : 'under';
   var statusText;
-  if (total >= 241) statusText = '<b>+' + Math.round(pctFromThreshold) + ' over the 200 line.</b> Comfortably above threshold — qualifies for listing without contested review.';
+  if (total >= 240) statusText = '<b>+' + Math.round(pctFromThreshold) + ' over the 200 line.</b> Comfortably above threshold — qualifies for listing without contested review.';
   else if (total >= 200) statusText = '<b>+' + Math.round(pctFromThreshold) + ' over the 200 line.</b> Inside the borderline window — listing eligible but reviewer sign-off required.';
   else if (total >= 181) statusText = '<b>−' + Math.round(Math.abs(pctFromThreshold)) + ' below the 200 line.</b> Close to the threshold — a single workshop iteration could push it over.';
   else if (total >= 121) statusText = '<b>−' + Math.round(Math.abs(pctFromThreshold)) + ' below the 200 line.</b> Material work needed before re-evaluation. Constructive feedback recommended.';
@@ -5295,7 +5303,7 @@ function buildCompetitorInsight(p) {
 
 function buildInvestorAdvice(p) {
   var sc = p.total || 0;
-  if (sc >= 241) {
+  if (sc >= 240) {
     return 'Top-band project. Recommend proceeding with introductions to investors in the VALUEX network matching the ticket size and sector. Due-diligence package can be assembled rapidly given the evidence layer is solid. ' + escapeHTML(p.name || '') + ' is a candidate for syndicate and lead-investor conversations.';
   } else if (sc >= 200) {
     return 'Borderline-but-eligible project. Recommend a soft-circle approach: warm intros to interested angels and family offices, but defer formal pitches until the highest-priority action items in the Recommended Next Steps are closed. Confidence in the score should be communicated transparently to investors.';
@@ -5306,7 +5314,7 @@ function buildInvestorAdvice(p) {
 
 function buildFounderAdvice(p) {
   var sc = p.total || 0;
-  if (sc >= 241) {
+  if (sc >= 240) {
     return 'Strong evaluation. Continue building the artifacts that lifted the score, and prepare for VALUEX-led investor introductions. Founder should expect deeper due diligence and should pre-prepare a data room covering financials, legal, technical, and team materials.';
   } else if (sc >= 200) {
     return 'Promising evaluation, with specific improvements that would lift the score one band. Recommend closing the top 2-3 priority action items in the Recommended Next Steps over the next 60 days, then requesting a re-evaluation. A workshop session with the VALUEX consultancy team can accelerate this.';
@@ -5319,7 +5327,7 @@ function buildFounderAdvice(p) {
 
 function buildEngagementCopy(p) {
   var sc = p.total || 0;
-  if (sc >= 241) return 'Selection Listing · Investor Matching · Advisory Support — full engagement available.';
+  if (sc >= 240) return 'Selection Listing · Investor Matching · Advisory Support — full engagement available.';
   if (sc >= 200) return 'Selection Listing (with reviewer sign-off) · Consultancy &amp; GTM Workshop · Selective Investor Matching.';
   if (sc >= 181) return 'Consultancy &amp; GTM Workshop strongly recommended — typically lifts the score above 200 within a single sprint.';
   return 'Consultancy &amp; GTM Workshop available — full engagement unlocks once the threshold is passed.';
