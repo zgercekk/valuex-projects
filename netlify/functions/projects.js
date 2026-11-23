@@ -103,8 +103,28 @@ function stageLabel(stage) {
   return s.toLowerCase();
 }
 
+// Recomputes the band from the total score rather than trusting the stored
+// 'band' field. Necessary because projects evaluated before the Sept 2026
+// band rename have the OLD key baked into their stored record (e.g.
+// 'weakly-promising', 'top') — and worse, the old key 'promising' meant
+// 241-300, while the new key 'promising' means 200-240, so blindly reusing
+// a stored 'promising' string would silently mean the wrong thing for an
+// older record. The total score itself never changed meaning, so deriving
+// the band from it here keeps this in sync with vxBand() in
+// valuex-workstation.html without needing every old record re-evaluated.
+function vxBandFromTotal(total) {
+  const t = Number(total) || 0;
+  if (t >= 301) return 'outstanding';
+  if (t >= 241) return 'strongly-promising';
+  if (t >= 200) return 'promising';
+  return 'weak';
+}
+
 function bandLabel(band) {
-  if (band === 'top') return 'top-tier';
+  // Band keys are: weak / promising / strongly-promising / outstanding
+  // (see vxBand() in valuex-workstation.html). The generic hyphen-to-space
+  // fallback already reads naturally for all four, so no special case
+  // is needed here.
   return String(band || '').replace(/-/g, ' ') || 'evaluated';
 }
 
@@ -125,7 +145,7 @@ function buildPublicSummary(p) {
   const name = p.name || 'This project';
   const sector = shortSectorLabel(p.sector);
   const stage = stageLabel(p.stage);
-  const band = bandLabel(p.band);
+  const band = bandLabel(vxBandFromTotal(p.total));
   const { top, bottom } = topBottomDims(p.dimensions);
 
   const sentence1 = `${name} is a ${sector} project at the ${stage} stage.`;
@@ -141,10 +161,34 @@ function buildPublicSummary(p) {
   return `${sentence1} VALUEX's evaluation places it in the ${band} band.`;
 }
 
+// Hand-edited public info from the workstation's "Selection profile" editor.
+// Stored on the record as p.publicProfile so an evaluation re-run (which
+// Object.assign's fresh evalData over the record) never overwrites it.
+// Only these keys are read; anything else in publicProfile is ignored.
+const PUBLIC_PROFILE_KEYS = ['website', 'founder', 'founderRole', 'founderLinkedin', 'contactEmail'];
+
+function cleanStr(v, max) {
+  return String(v == null ? '' : v).trim().slice(0, max || 500);
+}
+
 function toPublicShape(p) {
   const out = {};
   PUBLIC_FIELDS.forEach((k) => { if (p[k] !== undefined) out[k] = p[k]; });
-  out.summary = buildPublicSummary(p);
+
+  const pp = (p.publicProfile && typeof p.publicProfile === 'object') ? p.publicProfile : null;
+  if (pp) {
+    // A key that exists in publicProfile wins, even if empty -- clearing a
+    // field in the editor is how you hide it from the public page.
+    PUBLIC_PROFILE_KEYS.forEach((k) => {
+      if (Object.prototype.hasOwnProperty.call(pp, k)) out[k] = cleanStr(pp[k]);
+    });
+  }
+
+  // Custom "About" text replaces the auto-generated summary; an empty About
+  // falls back to buildPublicSummary() exactly as before.
+  const about = pp ? cleanStr(pp.about, 2000) : '';
+  out.summary = about || buildPublicSummary(p);
+  out.aboutCustom = !!about;
   return out;
 }
 

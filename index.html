@@ -721,5 +721,27 @@ p{font-size:16px;}
   document.addEventListener('visibilitychange',function(){if(document.hidden){if(raf){cancelAnimationFrame(raf);raf=null;}}else if(!reduce&&!raf)frame();});
 })();
 </script>
+
+<!-- Netlify Identity: invite/recovery emails link to the site root ("/"),
+     with a #invite_token=... or #recovery_token=... fragment. This widget
+     must be present here (not just on valuex-workstation.html) so that
+     fragment is ever picked up — otherwise the token lands on this page
+     and nothing listens for it, and the "set your password" step never
+     appears. On success, send the user straight into the workstation. -->
+<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+<script>
+  (function () {
+    var widget = window.netlifyIdentity;
+    if (!widget) return;
+    widget.on('init', function (user) {
+      // Already signed in and this page was reached via a stale invite
+      // link — no need to show anything, just continue browsing normally.
+    });
+    widget.on('login', function () {
+      window.location.href = '/valuex-workstation.html';
+    });
+    widget.init();
+  })();
+</script>
 </body>
 </html>
