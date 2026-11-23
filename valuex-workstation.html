@@ -90,6 +90,8 @@ input, textarea, select { font-family: inherit; }
 body:not(.authed) .app { display: none; }
 .auth-gate { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; background: var(--bg); }
 body.authed .auth-gate { display: none; }
+/* The Identity widget sets its own iframe to z-index 99; keep the login modal above the gate. */
+iframe#netlify-identity-widget { z-index: 10000 !important; }
 .auth-gate-card { width: 320px; text-align: center; padding: 40px 36px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow-lg); }
 .auth-gate-card img.wm { height: 18px; width: auto; display: block; margin: 0 auto 22px; }
 .auth-gate-card h1 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
@@ -1886,7 +1888,9 @@ function showAuthGate() {
   widget.on('error', function (err) { console.error('Netlify Identity error:', err); });
   document.getElementById('auth-gate-login').addEventListener('click', function () { widget.open('login'); });
   document.getElementById('sf-logout').addEventListener('click', function () { widget.logout(); });
-  widget.init();
+  // No widget.init() here: netlify-identity-widget.js already calls init()
+  // itself on DOMContentLoaded. Calling it again created a second, blank
+  // widget iframe, and the real login modal ended up hidden behind the gate.
 })();
 
 // Returns a headers object carrying the current Identity user's JWT, or {}
