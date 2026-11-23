@@ -1882,11 +1882,19 @@ function showAuthGate() {
     if (statusEl) statusEl.textContent = 'Netlify Identity failed to load — check your connection and reload.';
     return;
   }
+  // The widget also fires 'login' during its own init when it restores a saved
+  // session. Reloading on that would loop forever, so only reload after a
+  // login the user started from the gate's "Log in" button.
+  var loginRequested = false;
   widget.on('init', function (user) { user ? showAuthedUI(user) : showAuthGate(); });
-  widget.on('login', function () { widget.close(); window.location.reload(); });
+  widget.on('login', function (user) {
+    widget.close();
+    if (loginRequested) { loginRequested = false; window.location.reload(); }
+    else if (user) { showAuthedUI(user); }
+  });
   widget.on('logout', function () { window.location.reload(); });
   widget.on('error', function (err) { console.error('Netlify Identity error:', err); });
-  document.getElementById('auth-gate-login').addEventListener('click', function () { widget.open('login'); });
+  document.getElementById('auth-gate-login').addEventListener('click', function () { loginRequested = true; widget.open('login'); });
   document.getElementById('sf-logout').addEventListener('click', function () { widget.logout(); });
   // No widget.init() here: netlify-identity-widget.js already calls init()
   // itself on DOMContentLoaded. Calling it again created a second, blank
