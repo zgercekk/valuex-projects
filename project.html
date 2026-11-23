@@ -28,7 +28,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;}
-body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:#fff;-webkit-font-smoothing:antialiased;}
+body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:var(--paper);-webkit-font-smoothing:antialiased;}
 a{color:inherit;text-decoration:none;}
 img{max-width:100%;display:block;}
 
@@ -51,7 +51,9 @@ img{max-width:100%;display:block;}
 }
 
 /* ---------- page component ---------- */
-.vx{max-width:1240px;margin:0 auto;background:var(--paper);color:var(--ink);overflow-x:hidden;}
+/* Full-bleed like the Framer component: hero + "rate" band span the viewport,
+   content sections are capped at 1240px. */
+.vx{width:100%;background:var(--paper);color:var(--ink);overflow-x:hidden;}
 .vx-sec{width:100%;max-width:1240px;margin:0 auto;padding:76px 32px;}
 .vx-eyebrow{font-family:var(--mono);font-size:10.5px;font-weight:500;color:var(--violet);text-transform:uppercase;letter-spacing:.12em;line-height:1.4;margin-bottom:10px;}
 .vx-h2{font-family:var(--display);font-size:clamp(28px,3.5vw,38px);font-weight:700;line-height:1.08;letter-spacing:-.03em;color:var(--ink);margin:0 0 14px;}
@@ -87,7 +89,7 @@ img{max-width:100%;display:block;}
 .vx-co{display:flex;align-items:center;gap:22px;border:1px solid var(--line);border-radius:16px;padding:20px 24px;background:var(--paper);}
 .vx-co-logo{width:64px;height:64px;border-radius:14px;flex-shrink:0;background:var(--sand);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden;}
 .vx-co-logo img{width:100%;height:100%;object-fit:contain;padding:8px;}
-.vx-co-mono{font-family:var(--display);font-weight:700;font-size:26px;color:var(--violet);}
+.vx-co-mono{font-family:var(--display);font-weight:700;font-size:20px;color:var(--violet);}
 .vx-co-name{font-family:var(--display);font-size:19px;font-weight:700;margin-bottom:6px;}
 .vx-co-links{display:flex;flex-wrap:wrap;gap:14px;font-family:var(--mono);font-size:11px;color:var(--slate);}
 .vx-co-links a{color:var(--violet);font-weight:600;}
@@ -95,7 +97,7 @@ img{max-width:100%;display:block;}
 /* summary + snapshot */
 .vx-grid-2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:28px;}
 .vx-summary{background:var(--sand);}
-.vx-summary p{font-size:16px;line-height:1.72;color:var(--ink);white-space:pre-line;}
+.vx-summary p{font-size:16px;line-height:1.72;color:var(--ink);}
 .vx-snap-score{font-family:var(--display);font-size:48px;line-height:1;font-weight:700;margin-bottom:8px;}
 .vx-snap-sub{font-family:var(--mono);font-size:10px;color:var(--slate);text-transform:uppercase;letter-spacing:.08em;margin-bottom:20px;}
 .vx-snap-band{border-top:1px solid var(--line);padding-top:16px;}
@@ -136,6 +138,12 @@ img{max-width:100%;display:block;}
 .vx-th-flag{position:absolute;top:-29px;transform:translateX(-50%);font-family:var(--mono);font-size:9.5px;color:var(--ink);white-space:nowrap;}
 .vx-th-scale{display:flex;justify-content:space-between;gap:12px;margin-top:12px;font-family:var(--mono);font-size:10px;color:var(--slate);}
 
+/* investor-facing signals (only rendered when the feed supplies them) */
+.vx-signals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;}
+.vx-signal{border:1px solid var(--line);border-radius:14px;padding:22px;background:var(--paper);}
+.vx-signal b{display:block;font-family:var(--display);font-size:15px;font-weight:700;margin-bottom:8px;}
+.vx-signal p{font-size:13.5px;line-height:1.65;color:var(--slate);}
+
 /* CTAs */
 .vx-investor{display:flex;justify-content:space-between;align-items:center;gap:30px;padding:36px 40px;border-radius:18px;background:var(--hero);color:var(--cream);}
 .vx-investor .vx-eyebrow{color:var(--lilac);}
@@ -145,17 +153,28 @@ img{max-width:100%;display:block;}
 .vx-rate-in{max-width:760px;margin:0 auto;padding:76px 32px;text-align:center;}
 .vx-rate p{font-size:15px;color:var(--slate);line-height:1.7;margin:0 auto 28px;max-width:560px;}
 
+/* Framer component paddings: page 32 / 28 (<1100) / 20 (<700); section 76 / 64 / 54 */
+@media(max-width:1099px){
+  .vx-sec,.vx-rate-in{padding:64px 28px;}
+  .vx-hero-in{padding-left:28px;padding-right:28px;}
+  .vx-co-sec{padding:38px 28px;}
+}
 @media(max-width:899px){
-  .vx-hero-grid,.vx-grid-2,.vx-grid-4,.vx-profile-grid,.vx-dim-row,.vx-profile-sum{grid-template-columns:1fr!important;}
+  .vx-hero-grid,.vx-grid-2,.vx-grid-4,.vx-profile-grid,.vx-dim-row,.vx-profile-sum,.vx-signals{grid-template-columns:1fr!important;}
   .vx-meta{grid-template-columns:repeat(2,minmax(0,1fr));}
-  .vx-dim-meta{text-align:left;}
   .vx-investor{flex-direction:column;align-items:stretch;}
   .vx-btn{width:100%;}
+}
+@media(max-width:699px){
+  .vx-sec,.vx-rate-in{padding:54px 20px;}
+  .vx-hero-in{padding-left:20px;padding-right:20px;}
+  .vx-co-sec{padding:32px 20px;}
+  .vx-dim-meta{text-align:left;}
+  .vx-investor{padding:24px;}
 }
 @media(max-width:520px){
   .vx-meta{grid-template-columns:1fr;}
   .vx-co{flex-direction:column;align-items:flex-start;}
-  .vx-sec,.vx-hero-in,.vx-co-sec,.vx-rate-in{padding-left:16px;padding-right:16px;}
 }
 @media(prefers-reduced-motion:reduce){.vx *{transition:none!important;}}
 
@@ -193,7 +212,7 @@ img{max-width:100%;display:block;}
 <div style="padding:120px 24px 80px;max-width:640px;margin:0 auto;text-align:center;display:none;" id="state-notfound">
   <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--violet);margin-bottom:14px;">VALUEX Selection</div>
   <h1 style="font-family:'Space Grotesk',sans-serif;font-size:28px;margin-bottom:12px;">Project not found</h1>
-  <p style="color:var(--slate);font-size:14px;line-height:1.6;margin-bottom:26px;">This project isn't published to Selection right now — it may have been unpublished, re-evaluated under a different name, or the link is out of date.</p>
+  <p style="color:var(--slate);font-size:14px;line-height:1.6;margin-bottom:26px;">This project is not currently published to Selection. It may have been unpublished, renamed or re-evaluated.</p>
   <a href="selection.html" class="vx-btn" style="background:var(--violet);color:var(--cream);">Back to Selection →</a>
 </div>
 
@@ -221,14 +240,21 @@ img{max-width:100%;display:block;}
     Security:'Security posture, audits, technical risk and regulatory exposure.'
   };
   var RADAR_LABEL=['MARKET','TECH','SALES','ECON','SKILL','ENGAGEMENT','SECURITY'];
-  // Band colours as used on the live detail page.
-  var BAND_COLOR={'WEAK':'#B4452F','PROMISING':'#B47A2A','STRONGLY PROMISING':'#3F8F68','OUTSTANDING':'#6E5188'};
+  // Band colours as used on the live detail page (ProjectDetailPageContent.tsx getBandColor).
+  var BAND_COLOR={'WEAK':'#B85252','PROMISING':'#B47A2A','STRONGLY PROMISING':'#3F8F68','OUTSTANDING':'#9070A8'};
 
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
   function fmtScore(x){ return Math.abs(x-Math.round(x))<1e-9 ? String(Math.round(x)) : (Math.round(x*10)/10).toFixed(1); }
   // Live formatting: whole numbers plain ("4", "48"), everything else 2 decimals ("4.67", "4.50", "58.80").
   function fmt2(x){ var r=Math.round(x*100)/100; return Math.abs(r-Math.round(r))<1e-9 ? String(Math.round(r)) : r.toFixed(2); }
-  function bandFor(s){ return s<200?'WEAK':(s<240?'PROMISING':(s<300?'STRONGLY PROMISING':'OUTSTANDING')); }
+  // Same thresholds as the live page and vxBand() in the workstation: 200 / 241 / 301.
+  function bandFor(s){ return s<200?'WEAK':(s<241?'PROMISING':(s<301?'STRONGLY PROMISING':'OUTSTANDING')); }
+  function initials(n){
+    var parts=String(n||'').trim().split(/\s+/).filter(Boolean);
+    if(!parts.length) return 'VX';
+    if(parts.length===1) return parts[0].slice(0,2).toUpperCase();
+    return (parts[0][0]+parts[parts.length-1][0]).toUpperCase();
+  }
   function titleCase(b){ return b.toLowerCase().replace(/\b\w/g,function(c){return c.toUpperCase();}); }
   function safeUrl(u){
     u=String(u||'').trim(); if(!u) return '';
@@ -239,18 +265,19 @@ img{max-width:100%;display:block;}
   function buildDims(p){
     var dims={};
     (p.dimensions||[]).forEach(function(d){
-      var w=d.weight||0, pts=(typeof d.contrib==='number')?d.contrib:0;
-      dims[d.name]={avg:w>0?Math.round(pts/(w*60)*100)/100:0, weight:w, pts:pts};
+      var w=Number(d.weight)||0, pts=Number(d.contrib!=null?d.contrib:d.points)||0, avg=Number(d.avg)||0;
+      if(avg===0&&w>0&&pts>0) avg=pts/(w*60);
+      dims[d.name]={avg:avg, weight:w, pts:pts};
     });
     DIM_ORDER.forEach(function(n){ if(!dims[n]) dims[n]={avg:0,weight:0,pts:0}; });
     return dims;
   }
-  // Same tie-break the workstation uses for the summary text, so the
-  // "Development priorities" box always names the same dimensions as the summary.
+  // Same ordering as the live page: strongest = top 2 descending,
+  // development priorities = bottom 2 ascending (stable sort, so ties keep DIM_ORDER).
   function topBottom(dims){
     var arr=DIM_ORDER.map(function(n){return {name:n,avg:dims[n].avg};});
-    arr.sort(function(a,b){return b.avg-a.avg;});
-    return {top:arr.slice(0,2), bottom:arr.slice(-2).reverse()};
+    return {top:arr.slice().sort(function(a,b){return b.avg-a.avg;}).slice(0,2),
+            bottom:arr.slice().sort(function(a,b){return a.avg-b.avg;}).slice(0,2)};
   }
 
   function gaugeSVG(score,color){
@@ -305,7 +332,7 @@ img{max-width:100%;display:block;}
       +'<h1 class="vx-name">'+esc(name)+'</h1>'
       +'<div class="vx-meta">'
         +'<div><div class="vx-meta-k">Stage</div><div class="vx-meta-v">'+esc(p.stage||'—')+'</div></div>'
-        +'<div><div class="vx-meta-k">Token</div><div class="vx-meta-v">'+(p.token?'Yes':'No')+'</div></div>'
+        +'<div><div class="vx-meta-k">Token</div><div class="vx-meta-v">'+(p.token===true?'Yes':(p.token===false?'No':'—'))+'</div></div>'
         +'<div><div class="vx-meta-k">Profile</div><div class="vx-meta-v">'+esc(p.profile||'TECHX')+'</div></div>'
         +'<div><div class="vx-meta-k">Evaluation</div><div class="vx-meta-v">'+runDate+'</div></div>'
       +'</div>'
@@ -314,16 +341,16 @@ img{max-width:100%;display:block;}
       +'</div><div class="vx-gauge-card">'+gaugeSVG(score,color)+'</div></div></div></section>';
 
     var logoOk=/^data:image\/(png|jpe?g|webp|svg\+xml);base64,[A-Za-z0-9+\/=]+$/i.test(String(p.logo||''));
-    var logo=logoOk?'<img src="'+p.logo+'" alt="'+esc(name)+' logo">':'<span class="vx-co-mono">'+esc((name[0]||'?').toUpperCase())+'</span>';
+    var logo=logoOk?'<img src="'+p.logo+'" alt="'+esc(name)+' logo">':'<span class="vx-co-mono">'+esc(initials(p.name))+'</span>';
     var links=[];
-    if(p.founder) links.push('<span>'+esc(p.founder)+' · '+esc(p.founderRole||'Founder')+'</span>');
+    if(p.founder) links.push('<span>'+esc(p.founder)+' · Founder</span>');
     var web=safeUrl(p.website);
     if(web) links.push('<a href="'+esc(web)+'" target="_blank" rel="noopener noreferrer">Project website ↗</a>');
     var company='<section class="vx-sec vx-co-sec"><div class="vx-co"><div class="vx-co-logo">'+logo+'</div>'
       +'<div style="min-width:0;flex:1;"><div class="vx-co-name">'+esc(name)+'</div><div class="vx-co-links">'+links.join('')+'</div></div></div></section>';
 
     var summary='<section class="vx-sec"><div class="vx-grid-2">'
-      +'<div class="vx-card vx-summary"><div class="vx-eyebrow">Project summary</div><h2 class="vx-h2">Independent VALUEX assessment.</h2><p>'+esc(p.summary||'')+'</p></div>'
+      +'<div class="vx-card vx-summary"><div class="vx-eyebrow">Project summary</div><h2 class="vx-h2">Independent VALUEX assessment.</h2><p>'+esc(p.summary||'No public project summary is available yet.')+'</p></div>'
       +'<div class="vx-card"><div class="vx-eyebrow">Rating snapshot</div>'
       +'<div class="vx-snap-score" style="color:'+color+';">'+fmtScore(score)+'</div><div class="vx-snap-sub">VALUEX score · /360</div>'
       +'<div class="vx-snap-band"><b>'+titleCase(band)+'</b><p>Based on the currently available evidence and VALUEX’s standardized 0–360 evaluation framework.</p></div>'
@@ -343,7 +370,7 @@ img{max-width:100%;display:block;}
       return '<div class="vx-dim vx-hover"><div class="vx-dim-row">'
         +'<div><div class="vx-dim-name">'+esc(DIM_LABEL[n])+'</div><div class="vx-dim-desc">'+DIM_DESC[n]+'</div></div>'
         +'<div class="vx-track"><div class="vx-fill" style="width:'+w.toFixed(4)+'%"></div></div>'
-        +'<div class="vx-dim-meta">Avg. '+fmt2(d.avg)+' / 6<br>Weight '+d.weight.toFixed(2)+' · <strong>'+fmt2(d.pts)+' pts</strong></div>'
+        +'<div class="vx-dim-meta">Avg. '+fmt2(d.avg)+' / 6<br>Weight '+fmt2(d.weight)+' · <strong>'+fmt2(d.pts)+' pts</strong></div>'
         +'</div></div>';
     }).join('');
     var breakdown='<section class="vx-sec"><div class="vx-head"><div class="vx-eyebrow">Score breakdown</div><h2 class="vx-h2">Where the '+fmtScore(score)+' points come from.</h2>'
@@ -364,6 +391,12 @@ img{max-width:100%;display:block;}
       +'<div class="vx-th-flag" style="left:'+linePct.toFixed(4)+'%">PUBLIC LISTING · 200</div></div>'
       +'<div class="vx-th-scale"><span>0</span><span>'+fmtScore(score)+' / 360</span><span>360</span></div></div></section>';
 
+    var sig=[['Funding validation',p.funding],['Regulatory readiness',p.regulatory],['Licensing model',p.licensing],
+             ['Strategic partnerships',p.partnerships],['Investor relevance',p.investorRelevance]].filter(function(s){return !!s[1];});
+    var signals=!sig.length?'':'<section class="vx-sec"><div class="vx-head" style="margin-bottom:34px;"><div class="vx-eyebrow">Investor-facing signals</div>'
+      +'<h2 class="vx-h2">Commercial and institutional context.</h2><p class="vx-lead">These signals complement the quantitative rating and provide additional context for investor review.</p></div>'
+      +'<div class="vx-signals">'+sig.map(function(s){return '<div class="vx-signal vx-hover"><b>'+esc(s[0])+'</b><p>'+esc(s[1])+'</p></div>';}).join('')+'</div></section>';
+
     var investor='<section class="vx-sec"><div class="vx-investor"><div style="max-width:660px;"><div class="vx-eyebrow">For investors</div>'
       +'<h2 class="vx-h2">Want the full rating rationale?</h2><p>Discuss the criterion-level breakdown, evidence gaps, commercial signals and project-development priorities directly with VALUEX.</p></div>'
       +'<a class="vx-btn" href="https://calendly.com/d/d59-b26-rpg/investor-relations-via-valuex" target="_blank" rel="noopener noreferrer" style="background:var(--cream);color:var(--violet);flex-shrink:0;">Book an investor call →</a></div></section>';
@@ -372,7 +405,7 @@ img{max-width:100%;display:block;}
       +'<p>Submit your project for evaluation against the same structured VALUEX methodology.</p>'
       +'<a class="vx-btn" href="https://valuex.typeform.com/investmentstory" target="_blank" rel="noopener noreferrer" style="background:var(--violet);color:var(--cream);">Introduce a project →</a></div></section>';
 
-    document.getElementById('app-content').innerHTML='<div class="vx">'+hero+company+summary+method+breakdown+profile+thresh+investor+rate+'</div>';
+    document.getElementById('app-content').innerHTML='<div class="vx">'+hero+company+summary+method+breakdown+profile+thresh+signals+investor+rate+'</div>';
   }
 
   function showNotFound(){
